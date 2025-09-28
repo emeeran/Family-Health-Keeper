@@ -1,0 +1,5 @@
+{
+  "name": "Family Health Keeper",
+  "description": "An AI-powered system to manage your family's health records and get clinical insights using Google's Gemini API.",
+  "requestFramePermissions": []
+}

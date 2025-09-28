@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Health Keeper</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              // Updated for better contrast on derivative backgrounds (e.g., bg-primary/10)
+              DEFAULT: "#4338CA", // Was #4F46E5
+              hover: "#3730A3",   // Was #4338CA
+            },
+            // Updated for WCAG AA compliance with white text
+            secondary: "#047857", // Was #10B981
+            "background-light": "#F9FAFB",
+            "background-dark": "#111827",
+            "surface-light": "#FFFFFF",
+            "surface-dark": "#1F2937",
+            "text-light": "#1F2937",
+            "text-dark": "#F3F4F6",
+            "subtle-light": "#6B7280",
+            "subtle-dark": "#9CA3AF",
+            "border-light": "#E5E7EB",
+            "border-dark": "#374151",
+            "input-bg-light": "#F9FAFB",
+            "input-bg-dark": "#374151",
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+          },
+          borderRadius: {
+            lg: "0.5rem",
+            md: "0.375rem",
+            sm: "0.25rem",
+          },
+          boxShadow: {
+            'card': '0px 1px 3px rgba(0, 0, 0, 0.05), 0px 1px 2px rgba(0, 0, 0, 0.1)',
+          }
+        },
+      },
+    };
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+    }
+     .dot-flashing {
+        position: relative;
+        width: 6px;
+        height: 6px;
+        border-radius: 5px;
+        background-color: #9880ff;
+        color: #9880ff;
+        animation: dotFlashing 1s infinite linear alternate;
+        animation-delay: .5s;
+        display: inline-block;
+        margin-left: 5px;
+      }
+      .dot-flashing::before, .dot-flashing::after {
+        content: '';
+        display: inline-block;
+        position: absolute;
+        top: 0;
+      }
+      .dot-flashing::before {
+        left: -10px;
+        width: 6px;
+        height: 6px;
+        border-radius: 5px;
+        background-color: #9880ff;
+        color: #9880ff;
+        animation: dotFlashing 1s infinite alternate;
+        animation-delay: 0s;
+      }
+      .dot-flashing::after {
+        left: 10px;
+        width: 6px;
+        height: 6px;
+        border-radius: 5px;
+        background-color: #9880ff;
+        color: #9880ff;
+        animation: dotFlashing 1s infinite alternate;
+        animation-delay: 1s;
+      }
+      @keyframes dotFlashing {
+        0% {
+          background-color: #9880ff;
+        }
+        50%,
+        100% {
+          background-color: #ebe6ff;
+        }
+      }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0"
+  }
+}
+</script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-sans text-text-light dark:text-text-dark antialiased">
+  <div id="root"></div>
+</body>
+</html>
