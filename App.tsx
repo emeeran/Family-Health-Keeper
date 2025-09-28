@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -30,11 +28,33 @@ const App: React.FC = () => {
   const [isEditingPatient, setIsEditingPatient] = useState(false);
   const [isDoctorModalOpen, setIsDoctorModalOpen] = useState(false);
   const [doctorToEdit, setDoctorToEdit] = useState<Doctor | null>(null);
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) return savedTheme;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+    }
+    return 'light';
+  });
   
   const selectedPatient = patients.find(p => p.id === selectedPatientId) || null;
   
   const [formState, setFormState] = useState<MedicalRecord | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+        root.classList.add('dark');
+    } else {
+        root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   useEffect(() => {
     const patient = patients.find(p => p.id === selectedPatientId);
@@ -430,6 +450,8 @@ const App: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-hidden bg-background-light dark:bg-background-dark">
         <Header 
             selectedPatient={selectedPatient}
+            theme={theme}
+            onToggleTheme={toggleTheme}
         />
         <main className="flex-1 overflow-y-auto p-6">
             {selectedPatient && formState ? (
