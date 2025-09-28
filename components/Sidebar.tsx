@@ -92,6 +92,34 @@ const Sidebar: React.FC<SidebarProps> = ({
         return groups;
     }, [selectedPatient?.records]);
 
+    // --- Record Navigation Logic ---
+    const sortedRecords = useMemo(() => {
+        if (!selectedPatient?.records) return [];
+        // Create a sorted copy for navigation
+        return [...selectedPatient.records].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [selectedPatient?.records]);
+
+    const currentRecordIndex = useMemo(() => {
+        if (!selectedRecordId) return -1;
+        return sortedRecords.findIndex(r => r.id === selectedRecordId);
+    }, [selectedRecordId, sortedRecords]);
+
+    const hasPreviousRecord = currentRecordIndex > 0;
+    const hasNextRecord = currentRecordIndex !== -1 && currentRecordIndex < sortedRecords.length - 1;
+
+    const handlePreviousRecord = () => {
+        if (hasPreviousRecord) {
+            onSelectRecord(sortedRecords[currentRecordIndex - 1].id);
+        }
+    };
+
+    const handleNextRecord = () => {
+        if (hasNextRecord) {
+            onSelectRecord(sortedRecords[currentRecordIndex + 1].id);
+        }
+    };
+    // --- End Record Navigation Logic ---
+
     useEffect(() => {
         // When patient changes, expand the most recent year
         if (selectedPatient?.records && selectedPatient.records.length > 0) {
@@ -211,6 +239,28 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div className="flex justify-between items-center mb-2">
                             <h2 className="text-sm font-semibold text-subtle-light dark:text-subtle-dark uppercase">Records</h2>
                         </div>
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                            <button
+                                onClick={handlePreviousRecord}
+                                disabled={!hasPreviousRecord}
+                                className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium text-text-light dark:text-text-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                title="Previous Record"
+                                aria-label="Navigate to the previous record"
+                            >
+                                <span className="material-symbols-outlined text-sm">chevron_left</span>
+                                <span>Prev</span>
+                            </button>
+                            <button
+                                onClick={handleNextRecord}
+                                disabled={!hasNextRecord}
+                                className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium text-text-light dark:text-text-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                title="Next Record"
+                                aria-label="Navigate to the next record"
+                            >
+                                <span>Next</span>
+                                <span className="material-symbols-outlined text-sm">chevron_right</span>
+                            </button>
+                        </div>
                          <div className="flex items-center gap-2 mb-3">
                              <button onClick={onEditRecord} disabled={isEditing || !isRecordSelected} className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium text-text-light dark:text-text-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="Edit Record" aria-label="Edit the selected medical record">
                                 <span className="material-symbols-outlined text-sm">edit</span>
@@ -303,12 +353,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                     </div>
                     <ul className="space-y-1 max-h-48 overflow-y-auto">
                         {filteredDoctors.length > 0 ? filteredDoctors.map(doctor => (
-                            <li key={doctor.id} className="group flex items-center justify-between p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
-                                <div className="truncate">
+                            <li key={doctor.id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                                <div className="flex-1 truncate">
                                     <p className="text-sm font-medium">{doctor.name}</p>
                                     <p className="text-xs text-subtle-light dark:text-subtle-dark truncate">{doctor.specialty}</p>
                                 </div>
-                                <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex items-center shrink-0">
                                     <button onClick={() => onOpenDoctorModal(doctor)} title="Edit Doctor" aria-label={`Edit ${doctor.name}`} className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT">
                                         <span className="material-symbols-outlined text-base">edit</span>
                                     </button>

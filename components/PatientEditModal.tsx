@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import type { Patient, HospitalId, Doctor } from '../types';
 
