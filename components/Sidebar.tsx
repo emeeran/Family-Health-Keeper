@@ -47,35 +47,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     onOpenDoctorModal,
     onDeleteDoctor,
 }) => {
-    const [theme, setTheme] = React.useState(() => {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) return savedTheme;
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            return 'dark';
-        }
-        return 'light';
-    });
-    
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
     const debouncedDoctorSearchQuery = useDebounce(doctorSearchQuery, 300);
     const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
-
-
-    React.useEffect(() => {
-        const root = window.document.documentElement;
-        if (theme === 'dark') {
-            root.classList.add('dark');
-        } else {
-            root.classList.remove('dark');
-        }
-        localStorage.setItem('theme', theme);
-    }, [theme]);
-
-    const toggleTheme = () => {
-        setTheme(theme === 'dark' ? 'light' : 'dark');
-    };
 
     const filteredPatients = useMemo(() => {
         if (!debouncedSearchQuery) {
@@ -357,9 +333,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <p className="text-xs text-subtle-light dark:text-subtle-dark">Cardiologist</p>
                     </div>
                 </div>
-                <button onClick={toggleTheme} className="p-2 text-subtle-light dark:text-subtle-dark rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Theme" aria-label="Toggle between light and dark theme">
-                    <span className="material-symbols-outlined text-base">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
-                </button>
             </div>
         </aside>
     );
