@@ -266,7 +266,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 <span className="material-symbols-outlined text-sm">edit</span>
                                 <span>Edit</span>
                             </button>
-                             <button onClick={onSaveRecord} disabled={!isEditing || !isFormDirty} className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-primary-DEFAULT rounded-md hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="Save Record" aria-label="Save changes to the current medical record">
+                             <button onClick={onSaveRecord} className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-primary-DEFAULT rounded-md hover:bg-primary-hover transition-colors" title="Save Record" aria-label="Save changes to the current medical record">
                                 <span className="material-symbols-outlined text-sm">save</span>
                                 <span>Save</span>
                             </button>

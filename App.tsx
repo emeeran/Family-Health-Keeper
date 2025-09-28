@@ -23,8 +23,8 @@ const MAX_FILE_SIZE_MB = 10;
 const App: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>(PATIENTS);
   const [doctors, setDoctors] = useState<Doctor[]>(DOCTORS);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(PATIENTS[0]?.id || null);
-  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(PATIENTS[0]?.records[0]?.id || null);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
   const [isEditingPatient, setIsEditingPatient] = useState(false);
   const [isDoctorModalOpen, setIsDoctorModalOpen] = useState(false);
   const [doctorToEdit, setDoctorToEdit] = useState<Doctor | null>(null);
@@ -51,6 +51,16 @@ const App: React.FC = () => {
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Set initial selected patient when component mounts
+  useEffect(() => {
+    if (patients.length > 0 && !selectedPatientId) {
+      setSelectedPatientId(patients[0].id);
+      if (patients[0].records.length > 0) {
+        setSelectedRecordId(patients[0].records[0].id);
+      }
+    }
+  }, [patients, selectedPatientId]);
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');

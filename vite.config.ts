@@ -18,6 +18,31 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              vendor: ['react', 'react-dom'],
+              utils: ['@google/genai'],
+              components: [
+                './components/Header.tsx',
+                './components/Sidebar.tsx',
+                './components/PatientDetails.tsx',
+                './components/PatientEditModal.tsx',
+                './components/DoctorEditModal.tsx',
+                './components/AIAssistant.tsx',
+                './components/CurrentMedications.tsx',
+                './components/ReminderList.tsx'
+              ],
+              services: [
+                './services/geminiService.ts',
+                './services/pdfService.ts'
+              ]
+            }
+          }
+        }
       }
     };
 });
