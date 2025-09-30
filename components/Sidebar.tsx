@@ -157,6 +157,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     const recordYears = Object.keys(groupedRecords).sort((a, b) => Number(b) - Number(a));
 
+    const selectedRecord = selectedPatient?.records.find(r => r.id === selectedRecordId);
+    const selectedDoctor = doctors.find(d => d.id === selectedRecord?.doctorId);
 
     return (
         <aside className="w-80 bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex flex-col shrink-0">
@@ -170,11 +172,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="p-4 space-y-3 shrink-0 border-b border-border-light dark:border-border-dark">
                 <button onClick={onNewPatient} aria-label="Add a new family member" className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-secondary rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors">
                     <span className="material-symbols-outlined text-base">person_add</span>
-                    <span>New Person</span>
+                    <span>Add Person</span>
                 </button>
                 <button onClick={onNewRecord} disabled={!selectedPatient} aria-label="Add a new medical record for the selected person" className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-text-light dark:text-text-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     <span className="material-symbols-outlined text-base">add</span>
-                    <span>New Record</span>
+                    <span>Add Record</span>
                 </button>
             </div>
             
@@ -266,15 +268,20 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 <span className="material-symbols-outlined text-sm">edit</span>
                                 <span>Edit</span>
                             </button>
-                             <button onClick={onSaveRecord} className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-primary-DEFAULT rounded-md hover:bg-primary-hover transition-colors" title="Save Record" aria-label="Save changes to the current medical record">
-                                <span className="material-symbols-outlined text-sm">save</span>
-                                <span>Save</span>
-                            </button>
                              <button onClick={onDeleteRecord} disabled={!isRecordSelected} className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-red-700 rounded-md hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="Delete Record" aria-label="Delete the selected medical record">
                                 <span className="material-symbols-outlined text-sm">delete</span>
                                 <span>Delete</span>
                             </button>
                         </div>
+                        {/* Persistent Save Button */}
+                        {(isFormDirty || isEditing) && (
+                            <div className="mb-3">
+                                <button onClick={onSaveRecord} className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary-DEFAULT rounded-md hover:bg-primary-hover transition-colors" title="Save Record" aria-label="Save changes to the current medical record">
+                                    <span className="material-symbols-outlined text-sm">save</span>
+                                    <span>Save</span>
+                                </button>
+                            </div>
+                        )}
                         <ul className="space-y-1">
                            {recordYears.length > 0 ? recordYears.map(year => {
                                const isExpanded = expandedYears.has(year);
@@ -374,15 +381,32 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
             </div>
 
-            {/* Footer/User */}
+            {/* Footer/Selected Doctor */}
             <div className="p-4 border-t border-border-light dark:border-border-dark flex items-center justify-between shrink-0">
                  <div className="flex items-center gap-3">
-                    <img alt="Dr. Evelyn Reed" className="w-9 h-9 rounded-full" src="https://picsum.photos/id/1011/200/200" />
+                    <img
+                        alt={selectedDoctor ? selectedDoctor.name : "No doctor selected"}
+                        className="w-9 h-9 rounded-full"
+                        src={selectedDoctor ? `https://picsum.photos/id/${selectedDoctor.id}/200/200` : "https://picsum.photos/id/1011/200/200"}
+                    />
                     <div>
-                        <p className="font-semibold text-sm">Dr. Evelyn Reed</p>
-                        <p className="text-xs text-subtle-light dark:text-subtle-dark">Cardiologist</p>
+                        <p className="font-semibold text-sm">
+                            {selectedDoctor ? `Dr. ${selectedDoctor.name}` : "No Doctor Selected"}
+                        </p>
+                        <p className="text-xs text-subtle-light dark:text-subtle-dark">
+                            {selectedDoctor ? selectedDoctor.specialty : "Select a record to view doctor"}
+                        </p>
                     </div>
                 </div>
+                {selectedDoctor && (
+                    <button
+                        onClick={() => onOpenDoctorModal(selectedDoctor)}
+                        className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        title="Edit doctor details"
+                    >
+                        <span className="material-symbols-outlined text-base">edit</span>
+                    </button>
+                )}
             </div>
         </aside>
     );

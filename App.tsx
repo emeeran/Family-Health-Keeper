@@ -5,7 +5,9 @@ import PatientDetails from './components/PatientDetails';
 import { PATIENTS, DOCTORS } from './constants';
 import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor } from './types';
 import { generatePatientPdf } from './services/pdfService';
+import PatientFormModal from './components/PatientFormModal';
 import PatientEditModal from './components/PatientEditModal';
+import RecordFormModal from './components/RecordFormModal';
 import DoctorEditModal from './components/DoctorEditModal';
 
 const BLANK_RECORD: Omit<MedicalRecord, 'id' | 'documents'> = {
@@ -28,6 +30,10 @@ const App: React.FC = () => {
   const [isEditingPatient, setIsEditingPatient] = useState(false);
   const [isDoctorModalOpen, setIsDoctorModalOpen] = useState(false);
   const [doctorToEdit, setDoctorToEdit] = useState<Doctor | null>(null);
+  const [isPatientFormOpen, setIsPatientFormOpen] = useState(false);
+  const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null);
+  const [isRecordFormOpen, setIsRecordFormOpen] = useState(false);
+  const [recordToEdit, setRecordToEdit] = useState<MedicalRecord | null>(null);
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) return savedTheme;
@@ -104,31 +110,59 @@ const App: React.FC = () => {
   };
 
   const handleNewPatient = () => {
-    const name = window.prompt("Enter new person's name:");
-    if (name) {
-      const newPatient: Patient = {
-        id: `p-${Date.now()}`,
-        name,
-        hospitalIds: [],
-        avatarUrl: `https://picsum.photos/seed/${Date.now()}/200/200`,
-        medicalHistory: 'No prior history recorded.',
-        records: [],
-        reminders: [],
-        currentMedications: [],
-      };
-      setPatients(prev => [...prev, newPatient]);
-      handleSelectPatient(newPatient.id);
-    }
+    setPatientToEdit(null);
+    setIsPatientFormOpen(true);
   };
   
   const handleEditPatient = () => {
     if (!selectedPatient) return;
-    setIsEditingPatient(true);
+    setPatientToEdit(selectedPatient);
+    setIsPatientFormOpen(true);
   };
 
   const handleUpdatePatient = (updatedPatient: Patient) => {
       setPatients(prev => prev.map(p => p.id === updatedPatient.id ? updatedPatient : p));
       setIsEditingPatient(false);
+  };
+
+  const handleSavePatient = (patientData: Partial<Patient>) => {
+    if (patientToEdit) {
+      // Update existing patient
+      const updatedPatient: Patient = {
+        ...patientToEdit,
+        ...patientData,
+      };
+      setPatients(prev => prev.map(p => p.id === updatedPatient.id ? updatedPatient : p));
+      if (selectedPatientId === updatedPatient.id) {
+        setSelectedPatientId(updatedPatient.id);
+      }
+    } else {
+      // Create new patient
+      const newPatient: Patient = {
+        id: `p-${Date.now()}`,
+        name: patientData.name || '',
+        hospitalIds: patientData.hospitalIds || [],
+        avatarUrl: `https://picsum.photos/seed/${Date.now()}/200/200`,
+        medicalHistory: patientData.medicalHistory || '',
+        records: [],
+        reminders: [],
+        currentMedications: [],
+        dateOfBirth: patientData.dateOfBirth,
+        gender: patientData.gender,
+        contactInfo: patientData.contactInfo,
+        emergencyContact: patientData.emergencyContact,
+        allergies: patientData.allergies,
+        conditions: patientData.conditions,
+        surgeries: patientData.surgeries,
+        notableEvents: patientData.notableEvents,
+        medicalImages: patientData.medicalImages,
+        familyMedicalHistory: patientData.familyMedicalHistory,
+      };
+      setPatients(prev => [...prev, newPatient]);
+      handleSelectPatient(newPatient.id);
+    }
+    setIsPatientFormOpen(false);
+    setPatientToEdit(null);
   };
 
   const handleDeletePatient = () => {
@@ -193,10 +227,8 @@ const App: React.FC = () => {
       alert("Please select a person first.");
       return;
     }
-    const newRecord: MedicalRecord = { ...BLANK_RECORD, id: `new-${Date.now()}`, documents: [], isNew: true };
-    setFormState(newRecord);
-    setSelectedRecordId(newRecord.id);
-    setIsEditing(true); // Start in edit mode for new records
+    setRecordToEdit(null);
+    setIsRecordFormOpen(true);
   };
 
   const handleSaveRecord = () => {
@@ -225,6 +257,33 @@ const App: React.FC = () => {
     });
     setIsEditing(false); // Exit edit mode after saving
     alert('Record saved!');
+  };
+
+  const handleSaveRecordForm = (recordData: Omit<MedicalRecord, 'id' | 'documents'>, files?: File[]) => {
+    if (!selectedPatientId) return;
+
+    const newRecord: MedicalRecord = {
+      ...recordData,
+      id: `rec-${Date.now()}`,
+      documents: [],
+      isNew: true,
+    };
+
+    setPatients(prevPatients => {
+      return prevPatients.map(p => {
+        if (p.id === selectedPatientId) {
+          const updatedRecords = [newRecord, ...p.records];
+          return { ...p, records: updatedRecords };
+        }
+        return p;
+      });
+    });
+
+    setIsRecordFormOpen(false);
+    setRecordToEdit(null);
+    setSelectedRecordId(newRecord.id);
+    setFormState(newRecord);
+    setIsEditing(false);
   };
 
   const handleDeleteRecord = () => {
@@ -492,13 +551,36 @@ const App: React.FC = () => {
             )}
         </main>
       </div>
-       {isEditingPatient && selectedPatient && (
+       {isPatientFormOpen && (
+        <PatientFormModal
+          isOpen={isPatientFormOpen}
+          onClose={() => {
+            setIsPatientFormOpen(false);
+            setPatientToEdit(null);
+          }}
+          onSave={handleSavePatient}
+          editData={patientToEdit}
+        />
+      )}
+      {isEditingPatient && selectedPatient && (
         <PatientEditModal
             isOpen={isEditingPatient}
             patient={selectedPatient}
             onSave={handleUpdatePatient}
             onClose={() => setIsEditingPatient(false)}
             doctors={doctors}
+        />
+      )}
+      {isRecordFormOpen && (
+        <RecordFormModal
+          isOpen={isRecordFormOpen}
+          onClose={() => {
+            setIsRecordFormOpen(false);
+            setRecordToEdit(null);
+          }}
+          onSave={handleSaveRecordForm}
+          editData={recordToEdit}
+          doctors={doctors}
         />
       )}
       <DoctorEditModal

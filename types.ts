@@ -55,12 +55,46 @@ export interface HospitalId {
   patientId: string;
 }
 
+export interface ContactInfo {
+  phone?: string;
+  email?: string;
+  address?: string;
+}
+
+export interface EmergencyContact {
+  name: string;
+  relationship: string;
+  phone: string;
+}
+
+export interface Surgery {
+  type: string;
+  date: string;
+  notes?: string;
+}
+
+export interface NotableEvent {
+  type: string;
+  date: string;
+  description?: string;
+}
+
 export interface Patient {
   id: string;
   name: string;
+  dateOfBirth?: string;
+  gender?: 'male' | 'female' | 'other';
+  contactInfo?: ContactInfo;
+  emergencyContact?: EmergencyContact;
   hospitalIds: HospitalId[];
   avatarUrl: string;
   medicalHistory: string;
+  allergies?: string[];
+  conditions?: string[];
+  surgeries?: Surgery[];
+  notableEvents?: NotableEvent[];
+  familyMedicalHistory?: string;
+  medicalImages?: any[]; // Using any for now to avoid circular imports
   records: MedicalRecord[];
   reminders: Reminder[];
   currentMedications: Medication[];
