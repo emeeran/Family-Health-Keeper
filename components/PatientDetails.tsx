@@ -24,9 +24,9 @@ interface PatientDetailsProps {
     doctors: Doctor[];
 }
 
-const PatientDetails: React.FC<PatientDetailsProps> = ({ 
-    patient, 
-    selectedRecord, 
+const PatientDetails: React.FC<PatientDetailsProps> = ({
+    patient,
+    selectedRecord,
     onFormChange,
     onFileUpload,
     onDeleteDocument,
@@ -40,13 +40,20 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
     onDeleteMedication,
     doctors,
 }) => {
+    console.log('PatientDetails component mounted/updated:', {
+        patientName: patient.name,
+        selectedRecordId: selectedRecord.id,
+        isEditing,
+        isNewRecord: selectedRecord.id.startsWith('new-')
+    });
+
     const [historySummary, setHistorySummary] = useState<string>('');
     const [isSummaryLoading, setIsSummaryLoading] = useState<boolean>(true);
     const [reminderDefaults, setReminderDefaults] = useState<Partial<Omit<Reminder, 'id'|'completed'>> | null>(null);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [renamingDocId, setRenamingDocId] = useState<string | null>(null);
     const [tempDocName, setTempDocName] = useState('');
-    
+
     useEffect(() => {
         const fetchSummary = async () => {
             if (!patient) return;
@@ -130,7 +137,7 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
     };
 
     return (
-        <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-lg shadow-card h-full overflow-y-auto">
+      <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-lg shadow-card h-full overflow-y-auto">
             <div className="space-y-6">
                 <div className="flex items-center justify-between pb-4 border-b border-border-light dark:border-border-dark">
                     <div className="flex items-center gap-4">
@@ -192,7 +199,7 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
 
             <div className="pt-6 border-t border-border-light dark:border-border-dark">
                  <h4 className="text-lg font-semibold text-text-light dark:text-text-dark mb-4">Visit Details for {selectedRecord.date}</h4>
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-6 flex-1 flex flex-col">
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-subtle-light dark:text-subtle-dark mb-1" htmlFor="date">Date</label>

@@ -1,8 +1,21 @@
 {
   "permissions": {
     "allow": [
+<<<<<<< HEAD
       "WebFetch",
       "Bash"
+=======
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run build:*)",
+      "Bash(kill:*)",
+      "Bash(netstat:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(pkill:*)"
+>>>>>>> 56da4aec56e27e59d88cfbfe4080a03c55e5e389
     ],
     "deny": [],
     "ask": []

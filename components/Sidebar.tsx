@@ -5,6 +5,7 @@ import { useDebounce } from '../hooks/useDebounce';
 interface SidebarProps {
     patients: Patient[];
     selectedPatient: Patient | null;
+    selectedPatientId: string | null;
     selectedRecordId: string | null;
     onNewPatient: () => void;
     onNewRecord: () => void;
@@ -30,6 +31,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({
     patients,
     selectedPatient,
+    selectedPatientId,
     selectedRecordId,
     onNewPatient,
     onNewRecord,
@@ -210,16 +212,16 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <div className="flex justify-between items-center mb-2">
                         <h2 className="text-sm font-semibold text-subtle-light dark:text-subtle-dark uppercase">Family Members</h2>
                         <div className="flex items-center gap-1">
-                            <button onClick={onEditPatient} disabled={!selectedPatient} title="Edit Person" aria-label="Edit details for selected person" className="p-1 disabled:opacity-50 disabled:cursor-not-allowed text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT">
+                            <button onClick={onEditPatient} title="Edit Person" aria-label="Edit details for selected person" className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT">
                                 <span className="material-symbols-outlined text-base">edit</span>
                             </button>
-                             <button onClick={() => selectedPatient && onExportPatient(selectedPatient.id)} disabled={!selectedPatient} title="Export as JSON" aria-label="Export selected person's data as a JSON file" className="p-1 disabled:opacity-50 disabled:cursor-not-allowed text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT">
+                             <button onClick={() => selectedPatient && onExportPatient(selectedPatient.id)} title="Export as JSON" aria-label="Export selected person's data as a JSON file" className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT">
                                 <span className="material-symbols-outlined text-base">download</span>
                             </button>
-                             <button onClick={() => selectedPatient && onExportPatientPdf(selectedPatient.id)} disabled={!selectedPatient} title="Export as PDF" aria-label="Export selected person's data as a PDF document" className="p-1 disabled:opacity-50 disabled:cursor-not-allowed text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT">
+                             <button onClick={() => selectedPatient && onExportPatientPdf(selectedPatient.id)} title="Export as PDF" aria-label="Export selected person's data as a PDF document" className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT">
                                 <span className="material-symbols-outlined text-base">picture_as_pdf</span>
                             </button>
-                             <button onClick={onDeletePatient} disabled={!selectedPatient} title="Delete Person" aria-label="Delete selected person and all their records" className="p-1 disabled:opacity-50 disabled:cursor-not-allowed text-subtle-light dark:text-subtle-dark hover:text-red-600">
+                             <button onClick={onDeletePatient} title="Delete Person" aria-label="Delete selected person and all their records" className="p-1 text-subtle-light dark:text-subtle-dark hover:text-red-600">
                                 <span className="material-symbols-outlined text-base">delete</span>
                             </button>
                         </div>
@@ -278,8 +280,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div className="grid grid-cols-2 gap-2 mb-2">
                             <button
                                 onClick={handlePreviousRecord}
-                                disabled={!hasPreviousRecord}
-                                className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium text-text-light dark:text-text-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium text-text-light dark:text-text-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                                 title="Previous Record"
                                 aria-label="Navigate to the previous record"
                             >
@@ -288,8 +289,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                             </button>
                             <button
                                 onClick={handleNextRecord}
-                                disabled={!hasNextRecord}
-                                className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium text-text-light dark:text-text-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium text-text-light dark:text-text-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                                 title="Next Record"
                                 aria-label="Navigate to the next record"
                             >

@@ -82,12 +82,18 @@ const App: React.FC = () => {
     initializeData();
   }, []);
 
-  
+
   const toggleTheme = () => {
     setStoreTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   useEffect(() => {
+    // Don't reset formState if we're creating a new record (ID starts with "new-")
+    if (selectedRecordId?.startsWith('new-')) {
+      console.log('Skipping formState update for new record:', selectedRecordId);
+      return;
+    }
+
     const patient = patients.find(p => p.id === selectedPatientId);
     let record = null;
 
@@ -162,25 +168,17 @@ const App: React.FC = () => {
     closePatientForm();
   };
 
-  const handleDeletePatient = () => {
-      if (!selectedPatientId) return;
-      if (window.confirm('Are you sure you want to delete this person and all their records? This action cannot be undone.')) {
-          deletePatient(selectedPatientId);
-      }
-  };
-
-  const handleExportPatient = (patientId: string) => {
-    const { exportPatient } = useHealthStore.getState();
-    exportPatient(patientId);
-  };
-
-  const handleExportPatientPdf = async (patientId: string) => {
-    const { exportPatientPdf } = useHealthStore.getState();
-    exportPatientPdf(patientId);
-  };
-
   const handleNewRecord = () => {
+    console.log('handleNewRecord called:', {
+      selectedPatientId,
+      selectedPatient: patients.find(p => p.id === selectedPatientId),
+      doctorsLength: doctors.length,
+      doctors: doctors,
+      patientsLength: patients.length
+    });
+
     if (!selectedPatientId) {
+      console.log('No selected patient ID');
       alert("Please select a person first.");
       return;
     }
@@ -188,22 +186,35 @@ const App: React.FC = () => {
   };
 
   const handleSaveRecord = () => {
-    if (!formState || !selectedPatientId) return;
-
-    if (formState.id.startsWith('new-')) {
-      // New record - add it
-      const newRecord: MedicalRecord = {
-        ...formState,
-        id: `rec-${Date.now()}`,
-        isNew: false
-      };
-      addRecord(selectedPatientId, newRecord);
-    } else {
-      // Existing record - update it
-      updateRecord(selectedPatientId, formState.id, formState);
+    console.log('handleSaveRecord called:', {
+      formState,
+      selectedPatientId,
+      isNewRecord: formState?.id?.startsWith('new-')
+    });
+    if (!formState || !selectedPatientId) {
+      console.log('Cannot save - missing formState or selectedPatientId');
+      return;
     }
-    setIsEditing(false);
-    alert('Record saved!');
+
+    try {
+      if (formState.id.startsWith('new-')) {
+        // New record - add it
+        const newRecord: MedicalRecord = {
+          ...formState,
+          id: `rec-${Date.now()}`,
+          isNew: false
+        };
+        addRecord(selectedPatientId, newRecord);
+      } else {
+        // Existing record - update it
+        updateRecord(selectedPatientId, formState.id, formState);
+      }
+      setIsEditing(false);
+      alert('Record saved!');
+    } catch (error) {
+      console.error('Failed to save record:', error);
+      alert('Failed to save record. Please try again.');
+    }
   };
 
   const handleSaveRecordForm = (recordData: Omit<MedicalRecord, 'id' | 'documents'>, files?: File[]) => {
@@ -257,6 +268,23 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDeletePatient = () => {
+      if (!selectedPatientId) return;
+      if (window.confirm('Are you sure you want to delete this person and all their records? This action cannot be undone.')) {
+          deletePatient(selectedPatientId);
+      }
+  };
+
+  const handleExportPatient = (patientId: string) => {
+    const { exportPatient } = useHealthStore.getState();
+    exportPatient(patientId);
+  };
+
+  const handleExportPatientPdf = async (patientId: string) => {
+    const { exportPatientPdf } = useHealthStore.getState();
+    exportPatientPdf(patientId);
+  };
+
   const handleFileUpload = (files: FileList | null) => {
     if (!files || !selectedPatientId || !selectedRecordId) return;
 
@@ -283,7 +311,7 @@ const App: React.FC = () => {
             };
 
             // Use store action to add document to record
-            addDocument(selectedPatientId, selectedRecordId, newDoc);
+            addDocumentToRecord(selectedPatientId, selectedRecordId, newDoc);
         };
         reader.readAsDataURL(file);
     });
@@ -345,7 +373,7 @@ const App: React.FC = () => {
   const handleOpenDoctorModal = (doctor: Doctor | null) => {
       openDoctorModal(doctor);
   };
-  
+
   const handleSaveDoctor = (doctorData: Omit<Doctor, 'id'> | Doctor) => {
       if ('id' in doctorData) {
           // Editing existing doctor
@@ -379,6 +407,7 @@ const App: React.FC = () => {
       <Sidebar
         patients={patients}
         selectedPatient={selectedPatient}
+        selectedPatientId={selectedPatientId}
         selectedRecordId={selectedRecordId}
         onNewPatient={handleNewPatient}
         onNewRecord={handleNewRecord}
