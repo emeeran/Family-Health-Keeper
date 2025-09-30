@@ -11,6 +11,8 @@ export interface Doctor {
   id: string;
   name: string;
   specialty: string;
+  phone?: string;
+  address?: string;
 }
 
 export interface MedicalRecord {
@@ -59,6 +61,13 @@ export interface ContactInfo {
   phone?: string;
   email?: string;
   address?: string;
+  // Indian format specifics
+  alternatePhone?: string;
+  whatsapp?: string;
+  aadhaarNumber?: string;
+  state?: string;
+  city?: string;
+  pincode?: string;
 }
 
 export interface EmergencyContact {

@@ -23,6 +23,8 @@ interface SidebarProps {
     doctors: Doctor[];
     onOpenDoctorModal: (doctor: Doctor | null) => void;
     onDeleteDoctor: (id: string) => void;
+    onEditRecordModal: (record: MedicalRecord) => void;
+    onDeleteRecordDirect: (recordId: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -46,11 +48,15 @@ const Sidebar: React.FC<SidebarProps> = ({
     doctors,
     onOpenDoctorModal,
     onDeleteDoctor,
+    onEditRecordModal,
+    onDeleteRecordDirect,
 }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
     const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
     const debouncedDoctorSearchQuery = useDebounce(doctorSearchQuery, 300);
+    const [recordSearchQuery, setRecordSearchQuery] = useState('');
+    const debouncedRecordSearchQuery = useDebounce(recordSearchQuery, 300);
     const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
 
     const filteredPatients = useMemo(() => {
@@ -72,10 +78,27 @@ const Sidebar: React.FC<SidebarProps> = ({
         );
     }, [doctors, debouncedDoctorSearchQuery]);
 
+    const filterRecords = (records: MedicalRecord[]) => {
+        if (!debouncedRecordSearchQuery) {
+            return records;
+        }
+        const query = debouncedRecordSearchQuery.toLowerCase();
+        return records.filter(record =>
+            record.complaint.toLowerCase().includes(query) ||
+            record.diagnosis.toLowerCase().includes(query) ||
+            record.date.toLowerCase().includes(query) ||
+            (record.investigations && record.investigations.toLowerCase().includes(query)) ||
+            (record.prescription && record.prescription.toLowerCase().includes(query)) ||
+            (record.notes && record.notes.toLowerCase().includes(query))
+        );
+    };
+
     const groupedRecords = useMemo(() => {
         if (!selectedPatient?.records) return {};
-        
-        const groups = selectedPatient.records.reduce((acc, record) => {
+
+        const filteredRecords = filterRecords(selectedPatient.records);
+
+        const groups = filteredRecords.reduce((acc, record) => {
             const year = new Date(record.date).getFullYear().toString();
             if (!acc[year]) {
                 acc[year] = [];
@@ -90,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         }
 
         return groups;
-    }, [selectedPatient?.records]);
+    }, [selectedPatient?.records, debouncedRecordSearchQuery]);
 
     // --- Record Navigation Logic ---
     const sortedRecords = useMemo(() => {
@@ -161,7 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     const selectedDoctor = doctors.find(d => d.id === selectedRecord?.doctorId);
 
     return (
-        <aside className="w-80 bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex flex-col shrink-0">
+        <aside className="w-80 bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex flex-col shrink-0 h-screen overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b border-border-light dark:border-border-dark flex items-center gap-2 shrink-0">
                 <span className="material-symbols-outlined text-3xl text-primary-DEFAULT">health_and_safety</span>
@@ -241,6 +264,17 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div className="flex justify-between items-center mb-2">
                             <h2 className="text-sm font-semibold text-subtle-light dark:text-subtle-dark uppercase">Records</h2>
                         </div>
+                        <div className="relative mb-3">
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-subtle-light dark:text-subtle-dark text-base pointer-events-none">search</span>
+                            <input
+                                type="search"
+                                placeholder="Search records..."
+                                value={recordSearchQuery}
+                                onChange={(e) => setRecordSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-3 py-2 text-sm rounded-md border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark shadow-sm focus:border-primary-DEFAULT focus:ring-1 focus:ring-primary-DEFAULT"
+                                aria-label="Search records"
+                            />
+                        </div>
                         <div className="grid grid-cols-2 gap-2 mb-2">
                             <button
                                 onClick={handlePreviousRecord}
@@ -306,15 +340,15 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                             href="#"
                                                             onClick={(e) => { e.preventDefault(); onSelectRecord(record.id); }}
                                                             aria-current={selectedRecordId === record.id ? 'page' : undefined}
-                                                            className={`flex items-center gap-3 p-2 rounded-md transition-colors text-sm relative ${
+                                                            className={`flex items-center gap-3 p-2 rounded-md transition-colors text-sm relative group ${
                                                                 selectedRecordId === record.id
                                                                     ? 'bg-primary-DEFAULT/10'
                                                                     : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
                                                             }`}
-                                                            >
+                                                        >
                                                             {selectedRecordId === record.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-DEFAULT rounded-r-full"></div>}
                                                             <div className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full ${selectedRecordId === record.id ? 'bg-primary-DEFAULT/20 text-primary-DEFAULT' : 'bg-gray-200 dark:bg-gray-700 text-subtle-light dark:text-subtle-dark'}`}>
-                                                                    <span className="material-symbols-outlined text-base">receipt_long</span>
+                                                                <span className="material-symbols-outlined text-base">receipt_long</span>
                                                             </div>
                                                             <div className="flex-1 overflow-hidden">
                                                                 <p className={`font-semibold ${selectedRecordId === record.id ? 'text-primary-DEFAULT dark:text-indigo-400' : 'text-text-light dark:text-text-dark'}`}>

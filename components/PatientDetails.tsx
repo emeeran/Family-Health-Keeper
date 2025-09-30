@@ -130,28 +130,29 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
     };
 
     return (
-        <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-lg shadow-card flex flex-col space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-border-light dark:border-border-dark">
-                <div className="flex items-center gap-4">
-                    <img alt={patient.name} className="w-16 h-16 rounded-full" src={patient.avatarUrl} />
-                    <div>
-                        <h3 className="text-2xl font-bold text-text-light dark:text-text-dark">{patient.name}</h3>
-                        <div className="text-subtle-light dark:text-subtle-dark mt-1 flex flex-wrap gap-x-4 gap-y-1">
-                            {(patient.hospitalIds && patient.hospitalIds.length > 0) ? (
-                                patient.hospitalIds.map((hid) => (
-                                    <div key={hid.id} className="text-sm">
-                                        <span className="font-semibold">{hid.hospitalName}:</span> {hid.patientId}
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-sm italic">No hospital IDs on record.</p>
-                            )}
+        <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-lg shadow-card h-full overflow-y-auto">
+            <div className="space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-border-light dark:border-border-dark">
+                    <div className="flex items-center gap-4">
+                        <img alt={patient.name} className="w-16 h-16 rounded-full" src={patient.avatarUrl} />
+                        <div>
+                            <h3 className="text-2xl font-bold text-text-light dark:text-text-dark">{patient.name}</h3>
+                            <div className="text-subtle-light dark:text-subtle-dark mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                                {(patient.hospitalIds && patient.hospitalIds.length > 0) ? (
+                                    patient.hospitalIds.map((hid) => (
+                                        <div key={hid.id} className="text-sm">
+                                            <span className="font-semibold">{hid.hospitalName}:</span> {hid.patientId}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm italic">No hospital IDs on record.</p>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <CurrentMedications
+
+                <CurrentMedications
                 patient={patient}
                 onAddMedication={onAddMedication}
                 onUpdateMedication={onUpdateMedication}
@@ -341,6 +342,7 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
                         )}
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     );

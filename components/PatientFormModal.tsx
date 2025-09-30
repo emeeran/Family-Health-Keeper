@@ -87,16 +87,6 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
       name: formData.name,
       dateOfBirth: formData.dateOfBirth || undefined,
       gender: formData.gender as 'male' | 'female' | 'other' | undefined,
-      contactInfo: {
-        phone: formData.phone || undefined,
-        email: formData.email || undefined,
-        address: formData.address || undefined,
-      },
-      emergencyContact: formData.emergencyName ? {
-        name: formData.emergencyName,
-        relationship: formData.emergencyRelationship,
-        phone: formData.emergencyPhone,
-      } : undefined,
       medicalHistory: formData.medicalHistory,
       allergies: formData.allergies ? formData.allergies.split(',').map(a => a.trim()).filter(a => a) : undefined,
       conditions: formData.conditions ? formData.conditions.split(',').map(c => c.trim()).filter(c => c) : undefined,
@@ -240,7 +230,7 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
               </div>
             </div>
 
-  
+
             {/* Medical History */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-700 p-4 rounded-lg border border-green-100 dark:border-gray-600">
               <h3 className="text-base font-semibold mb-3 text-gray-800 dark:text-gray-200 flex items-center gap-1">

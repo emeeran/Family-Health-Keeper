@@ -1,52 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import PatientDetails from './components/PatientDetails';
-import { PATIENTS, DOCTORS } from './constants';
 import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor } from './types';
 import { generatePatientPdf } from './services/pdfService';
 import PatientFormModal from './components/PatientFormModal';
 import PatientEditModal from './components/PatientEditModal';
 import RecordFormModal from './components/RecordFormModal';
 import DoctorEditModal from './components/DoctorEditModal';
-
-const BLANK_RECORD: Omit<MedicalRecord, 'id' | 'documents'> = {
-    date: new Date().toISOString().split('T')[0],
-    doctorId: DOCTORS[0]?.id || '',
-    complaint: '',
-    investigations: '',
-    diagnosis: '',
-    prescription: '',
-    notes: '',
-};
+import { useHealthStore } from './stores/useHealthStore';
 
 const MAX_FILE_SIZE_MB = 10;
 
 const App: React.FC = () => {
-  const [patients, setPatients] = useState<Patient[]>(PATIENTS);
-  const [doctors, setDoctors] = useState<Doctor[]>(DOCTORS);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
-  const [isEditingPatient, setIsEditingPatient] = useState(false);
-  const [isDoctorModalOpen, setIsDoctorModalOpen] = useState(false);
-  const [doctorToEdit, setDoctorToEdit] = useState<Doctor | null>(null);
-  const [isPatientFormOpen, setIsPatientFormOpen] = useState(false);
-  const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null);
-  const [isRecordFormOpen, setIsRecordFormOpen] = useState(false);
-  const [recordToEdit, setRecordToEdit] = useState<MedicalRecord | null>(null);
-  const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) return savedTheme;
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-    }
-    return 'light';
-  });
-  
+  const {
+    patients,
+    doctors,
+    selectedPatientId,
+    selectedRecordId,
+    isEditingRecord,
+    formState,
+    originalRecord,
+    isFormDirty,
+    isPatientFormModalOpen,
+    isRecordFormModalOpen,
+    isDoctorModalOpen,
+    patientToEdit,
+    recordToEdit,
+    doctorToEdit,
+    theme,
+    setSelectedPatient,
+    setSelectedRecord,
+    setPatients,
+    setDoctors,
+    addPatient,
+    updatePatient,
+    deletePatient,
+    addRecord,
+    updateRecord,
+    deleteRecord,
+    addDoctor,
+    updateDoctor,
+    deleteDoctor,
+    openPatientForm,
+    closePatientForm,
+    openRecordForm,
+    closeRecordForm,
+    openDoctorModal,
+    closeDoctorModal,
+    setFormStateRecord,
+    setOriginalRecord,
+    setFormDirty,
+    toggleEditMode,
+    setTheme: setStoreTheme,
+    setFormState,
+    setIsEditing,
+    initializeData,
+    addDocument: addDocumentToRecord,
+    deleteDocument,
+    renameDocument,
+    addReminder,
+    toggleReminder,
+    deleteReminder,
+    addMedication,
+    updateMedication,
+    deleteMedication
+  } = useHealthStore();
+
   const selectedPatient = patients.find(p => p.id === selectedPatientId) || null;
-  
-  const [formState, setFormState] = useState<MedicalRecord | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -55,87 +76,65 @@ const App: React.FC = () => {
     } else {
         root.classList.remove('dark');
     }
-    localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Set initial selected patient when component mounts
   useEffect(() => {
-    if (patients.length > 0 && !selectedPatientId) {
-      setSelectedPatientId(patients[0].id);
-      if (patients[0].records.length > 0) {
-        setSelectedRecordId(patients[0].records[0].id);
-      }
-    }
-  }, [patients, selectedPatientId]);
+    initializeData();
+  }, []);
 
+  
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    setStoreTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   useEffect(() => {
     const patient = patients.find(p => p.id === selectedPatientId);
-    const record = patient?.records.find(r => r.id === selectedRecordId) || null;
-    setFormState(record);
+    let record = null;
+
+    if (patient) {
+      record = patient.records.find(r => r.id === selectedRecordId) || null;
+      // If selected record doesn't exist but patient has records, select the first one
+      if (!record && patient.records.length > 0) {
+        record = patient.records[0];
+        setSelectedRecord(record.id);
+      }
+    }
+
+    setFormStateRecord(record);
+    setOriginalRecord(record);
     setIsEditing(false); // Default to read-only when selection changes
-  }, [selectedPatientId, selectedRecordId, patients]);
+  }, [selectedPatientId, selectedRecordId, patients, setFormStateRecord, setOriginalRecord, setIsEditing, setSelectedRecord]);
 
   const handleSelectPatient = (patientId: string) => {
-    const patient = patients.find(p => p.id === patientId);
-    setSelectedPatientId(patientId);
-    setSelectedRecordId(patient?.records[0]?.id || null);
+    setSelectedPatient(patientId);
   };
 
   const handleSelectRecord = (recordId: string) => {
-    setSelectedRecordId(recordId);
-    
-    // Mark record as "read"
-    setPatients(prevPatients => prevPatients.map(p => {
-        if (p.id === selectedPatientId) {
-            return {
-                ...p,
-                records: p.records.map(r => 
-                    r.id === recordId ? { ...r, isNew: false } : r
-                ),
-            };
-        }
-        return p;
-    }));
+    setSelectedRecord(recordId);
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
-    if (formState) {
-        setFormState(prevState => prevState ? { ...prevState, [id]: value } : null);
-    }
+    setFormState(id, value);
   };
 
   const handleNewPatient = () => {
-    setPatientToEdit(null);
-    setIsPatientFormOpen(true);
+    openPatientForm(null);
   };
-  
+
   const handleEditPatient = () => {
     if (!selectedPatient) return;
-    setPatientToEdit(selectedPatient);
-    setIsPatientFormOpen(true);
+    openPatientForm(selectedPatient);
   };
 
   const handleUpdatePatient = (updatedPatient: Patient) => {
-      setPatients(prev => prev.map(p => p.id === updatedPatient.id ? updatedPatient : p));
-      setIsEditingPatient(false);
+    updatePatient(updatedPatient.id, updatedPatient);
   };
 
   const handleSavePatient = (patientData: Partial<Patient>) => {
     if (patientToEdit) {
       // Update existing patient
-      const updatedPatient: Patient = {
-        ...patientToEdit,
-        ...patientData,
-      };
-      setPatients(prev => prev.map(p => p.id === updatedPatient.id ? updatedPatient : p));
-      if (selectedPatientId === updatedPatient.id) {
-        setSelectedPatientId(updatedPatient.id);
-      }
+      updatePatient(patientToEdit.id, patientData);
     } else {
       // Create new patient
       const newPatient: Patient = {
@@ -158,68 +157,26 @@ const App: React.FC = () => {
         medicalImages: patientData.medicalImages,
         familyMedicalHistory: patientData.familyMedicalHistory,
       };
-      setPatients(prev => [...prev, newPatient]);
-      handleSelectPatient(newPatient.id);
+      addPatient(newPatient);
     }
-    setIsPatientFormOpen(false);
-    setPatientToEdit(null);
+    closePatientForm();
   };
 
   const handleDeletePatient = () => {
       if (!selectedPatientId) return;
       if (window.confirm('Are you sure you want to delete this person and all their records? This action cannot be undone.')) {
-          let newPatientToSelectId: string | null = null;
-          const patientIndex = patients.findIndex(p => p.id === selectedPatientId);
-          const remainingPatients = patients.filter(p => p.id !== selectedPatientId);
-
-          if (remainingPatients.length > 0) {
-              newPatientToSelectId = patientIndex > 0 ? remainingPatients[patientIndex - 1].id : remainingPatients[0].id;
-          }
-
-          setPatients(remainingPatients);
-          if (newPatientToSelectId) {
-              handleSelectPatient(newPatientToSelectId);
-          } else {
-              setSelectedPatientId(null);
-              setSelectedRecordId(null);
-              setFormState(null);
-          }
+          deletePatient(selectedPatientId);
       }
   };
 
   const handleExportPatient = (patientId: string) => {
-    const patientToExport = patients.find(p => p.id === patientId);
-    if (!patientToExport) {
-      alert("Could not find the person to export.");
-      return;
-    }
-
-    const dataStr = JSON.stringify(patientToExport, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${patientToExport.name.replace(/\s+/g, '_')}_health_record.json`;
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const { exportPatient } = useHealthStore.getState();
+    exportPatient(patientId);
   };
 
   const handleExportPatientPdf = async (patientId: string) => {
-    const patientToExport = patients.find(p => p.id === patientId);
-    if (!patientToExport) {
-      alert("Could not find the person to export.");
-      return;
-    }
-    try {
-      alert("Generating PDF... This may take a moment.");
-      await generatePatientPdf(patientToExport, doctors);
-    } catch (error) {
-      console.error("Failed to generate PDF:", error);
-      alert("An error occurred while generating the PDF. Please check the console for details.");
-    }
+    const { exportPatientPdf } = useHealthStore.getState();
+    exportPatientPdf(patientId);
   };
 
   const handleNewRecord = () => {
@@ -227,63 +184,51 @@ const App: React.FC = () => {
       alert("Please select a person first.");
       return;
     }
-    setRecordToEdit(null);
-    setIsRecordFormOpen(true);
+    openRecordForm(null);
   };
 
   const handleSaveRecord = () => {
     if (!formState || !selectedPatientId) return;
 
-    setPatients(prevPatients => {
-      return prevPatients.map(p => {
-        if (p.id === selectedPatientId) {
-          const existingRecordIndex = p.records.findIndex(r => r.id === formState.id);
-          let updatedRecords;
-
-          if (existingRecordIndex > -1) {
-            // Update existing record
-            updatedRecords = [...p.records];
-            updatedRecords[existingRecordIndex] = formState;
-          } else {
-            // Add new record
-            const newRecordWithId = { ...formState, id: `rec-${Date.now()}` };
-            updatedRecords = [newRecordWithId, ...p.records];
-            setSelectedRecordId(newRecordWithId.id); // Update selected ID to the new permanent one
-          }
-          return { ...p, records: updatedRecords };
-        }
-        return p;
-      });
-    });
-    setIsEditing(false); // Exit edit mode after saving
+    if (formState.id.startsWith('new-')) {
+      // New record - add it
+      const newRecord: MedicalRecord = {
+        ...formState,
+        id: `rec-${Date.now()}`,
+        isNew: false
+      };
+      addRecord(selectedPatientId, newRecord);
+    } else {
+      // Existing record - update it
+      updateRecord(selectedPatientId, formState.id, formState);
+    }
+    setIsEditing(false);
     alert('Record saved!');
   };
 
   const handleSaveRecordForm = (recordData: Omit<MedicalRecord, 'id' | 'documents'>, files?: File[]) => {
     if (!selectedPatientId) return;
 
-    const newRecord: MedicalRecord = {
-      ...recordData,
-      id: `rec-${Date.now()}`,
-      documents: [],
-      isNew: true,
-    };
+    if (recordToEdit) {
+      // Update existing record
+      const updatedRecord: MedicalRecord = {
+        ...recordToEdit,
+        ...recordData,
+        documents: recordToEdit.documents, // Preserve existing documents
+      };
+      updateRecord(selectedPatientId, recordToEdit.id, updatedRecord);
+    } else {
+      // Create new record
+      const newRecord: MedicalRecord = {
+        ...recordData,
+        id: `rec-${Date.now()}`,
+        documents: [],
+        isNew: true,
+      };
+      addRecord(selectedPatientId, newRecord);
+    }
 
-    setPatients(prevPatients => {
-      return prevPatients.map(p => {
-        if (p.id === selectedPatientId) {
-          const updatedRecords = [newRecord, ...p.records];
-          return { ...p, records: updatedRecords };
-        }
-        return p;
-      });
-    });
-
-    setIsRecordFormOpen(false);
-    setRecordToEdit(null);
-    setSelectedRecordId(newRecord.id);
-    setFormState(newRecord);
-    setIsEditing(false);
+    closeRecordForm();
   };
 
   const handleDeleteRecord = () => {
@@ -293,31 +238,27 @@ const App: React.FC = () => {
     }
 
     if (window.confirm('Are you sure you want to delete this record?')) {
-      let newRecordToSelectId: string | null = null;
-      
-      setPatients(prevPatients => prevPatients.map(p => {
-        if (p.id === selectedPatientId) {
-          const recordIndex = p.records.findIndex(r => r.id === selectedRecordId);
-          const updatedRecords = p.records.filter(r => r.id !== selectedRecordId);
-          
-          if (updatedRecords.length > 0) {
-            newRecordToSelectId = recordIndex > 0 ? updatedRecords[recordIndex - 1].id : updatedRecords[0].id;
-          }
+      deleteRecord(selectedPatientId, selectedRecordId);
+    }
+  };
 
-          return { ...p, records: updatedRecords };
-        }
-        return p;
-      }));
+  const handleEditRecordModal = (record: MedicalRecord) => {
+    openRecordForm(record);
+  };
 
-      setSelectedRecordId(newRecordToSelectId);
-      if (!newRecordToSelectId) {
-        setFormState(null);
-      }
+  const handleDeleteRecordDirect = (recordId: string) => {
+    if (!selectedPatientId) {
+      alert("No patient selected.");
+      return;
+    }
+
+    if (window.confirm('Are you sure you want to delete this record? This action cannot be undone.')) {
+      deleteRecord(selectedPatientId, recordId);
     }
   };
 
   const handleFileUpload = (files: FileList | null) => {
-    if (!files || !formState) return;
+    if (!files || !selectedPatientId || !selectedRecordId) return;
 
     Array.from(files).forEach(file => {
         const docType = file.type.startsWith('image/') ? 'image' : (file.type === 'application/pdf' ? 'pdf' : null);
@@ -332,7 +273,6 @@ const App: React.FC = () => {
             return;
         }
 
-
         const reader = new FileReader();
         reader.onload = (e) => {
             const newDoc: Document = {
@@ -342,139 +282,84 @@ const App: React.FC = () => {
                 url: e.target?.result as string,
             };
 
-            setFormState(prevState => {
-                if (!prevState) return null;
-                // Add the new document to the existing documents array
-                return { ...prevState, documents: [...prevState.documents, newDoc] };
-            });
+            // Use store action to add document to record
+            addDocument(selectedPatientId, selectedRecordId, newDoc);
         };
         reader.readAsDataURL(file);
     });
   };
 
   const handleDeleteDocument = (documentId: string) => {
-    if (!formState) return;
-    
-    setFormState(prevState => {
-        if (!prevState) return null;
-        return {
-            ...prevState,
-            documents: prevState.documents.filter(doc => doc.id !== documentId),
-        };
-    });
+    if (!selectedPatientId || !selectedRecordId) return;
+
+    // Use store action to delete document from record
+    deleteDocument(selectedPatientId, selectedRecordId, documentId);
   };
-  
+
   const handleRenameDocument = (documentId: string, newName: string) => {
-    if (!formState) return;
-    setFormState(prevState => {
-        if (!prevState) return null;
-        const updatedDocuments = prevState.documents.map(doc =>
-            doc.id === documentId ? { ...doc, name: newName } : doc
-        );
-        return { ...prevState, documents: updatedDocuments };
-    });
+    if (!selectedPatientId || !selectedRecordId) return;
+
+    // Use store action to rename document in record
+    renameDocument(selectedPatientId, selectedRecordId, documentId, newName);
   };
 
   const handleEdit = () => {
-    setIsEditing(true);
+    if (formState) {
+      openRecordForm(formState);
+    }
   };
 
   const handleAddReminder = (patientId: string, reminderData: Omit<Reminder, 'id' | 'completed'>) => {
-    setPatients(prev => prev.map(p => {
-        if (p.id === patientId) {
-            const newReminder: Reminder = {
-                ...reminderData,
-                id: `rem-${Date.now()}`,
-                completed: false,
-            };
-            const updatedReminders = [...(p.reminders || []), newReminder];
-            return { ...p, reminders: updatedReminders };
-        }
-        return p;
-    }));
+    // Use store action to add reminder
+    addReminder(patientId, reminderData);
   };
 
   const handleToggleReminder = (patientId: string, reminderId: string) => {
-      setPatients(prev => prev.map(p => {
-          if (p.id === patientId) {
-              const updatedReminders = (p.reminders || []).map(r => 
-                  r.id === reminderId ? { ...r, completed: !r.completed } : r
-              );
-              return { ...p, reminders: updatedReminders };
-          }
-          return p;
-      }));
+    // Use store action to toggle reminder
+    toggleReminder(patientId, reminderId);
   };
 
   const handleDeleteReminder = (patientId: string, reminderId: string) => {
-       if (!window.confirm('Are you sure you want to delete this reminder?')) return;
-       setPatients(prev => prev.map(p => {
-          if (p.id === patientId) {
-              const updatedReminders = (p.reminders || []).filter(r => r.id !== reminderId);
-              return { ...p, reminders: updatedReminders };
-          }
-          return p;
-      }));
+    if (!window.confirm('Are you sure you want to delete this reminder?')) return;
+    // Use store action to delete reminder
+    deleteReminder(patientId, reminderId);
   };
-  
+
   const handleAddMedication = (patientId: string, medicationData: Omit<Medication, 'id'>) => {
-    setPatients(prev => prev.map(p => {
-        if (p.id === patientId) {
-            const newMedication: Medication = {
-                ...medicationData,
-                id: `med-${Date.now()}`
-            };
-            const updatedMeds = [...(p.currentMedications || []), newMedication];
-            return { ...p, currentMedications: updatedMeds };
-        }
-        return p;
-    }));
+    // Use store action to add medication
+    addMedication(patientId, medicationData);
   };
 
   const handleUpdateMedication = (patientId: string, updatedMedication: Medication) => {
-      setPatients(prev => prev.map(p => {
-          if (p.id === patientId) {
-              const updatedMeds = (p.currentMedications || []).map(med => 
-                  med.id === updatedMedication.id ? updatedMedication : med
-              );
-              return { ...p, currentMedications: updatedMeds };
-          }
-          return p;
-      }));
+    // Use store action to update medication
+    updateMedication(patientId, updatedMedication);
   };
 
   const handleDeleteMedication = (patientId: string, medicationId: string) => {
-      if (!window.confirm('Are you sure you want to delete this medication?')) return;
-      setPatients(prev => prev.map(p => {
-          if (p.id === patientId) {
-              const updatedMeds = (p.currentMedications || []).filter(med => med.id !== medicationId);
-              return { ...p, currentMedications: updatedMeds };
-          }
-          return p;
-      }));
+    if (!window.confirm('Are you sure you want to delete this medication?')) return;
+    // Use store action to delete medication
+    deleteMedication(patientId, medicationId);
   };
 
   // --- Doctor Handlers ---
   const handleOpenDoctorModal = (doctor: Doctor | null) => {
-      setDoctorToEdit(doctor);
-      setIsDoctorModalOpen(true);
+      openDoctorModal(doctor);
   };
   
   const handleSaveDoctor = (doctorData: Omit<Doctor, 'id'> | Doctor) => {
       if ('id' in doctorData) {
           // Editing existing doctor
-          setDoctors(prev => prev.map(d => d.id === doctorData.id ? doctorData : d));
+          updateDoctor(doctorData.id, doctorData);
       } else {
           // Adding new doctor
           const newDoctor: Doctor = { ...doctorData, id: `doc-${Date.now()}` };
-          setDoctors(prev => [...prev, newDoctor]);
+          addDoctor(newDoctor);
       }
-      setIsDoctorModalOpen(false);
-      setDoctorToEdit(null);
+      closeDoctorModal();
   };
 
   const handleDeleteDoctor = (doctorId: string) => {
-    const isDoctorInUse = patients.some(p => 
+    const isDoctorInUse = patients.some(p =>
         p.primaryDoctorId === doctorId ||
         p.records.some(r => r.doctorId === doctorId)
     );
@@ -485,16 +370,13 @@ const App: React.FC = () => {
     }
 
     if (window.confirm("Are you sure you want to delete this doctor?")) {
-        setDoctors(prev => prev.filter(d => d.id !== doctorId));
+        deleteDoctor(doctorId);
     }
   };
 
-  const originalRecord = selectedPatient?.records.find(r => r.id === formState?.id);
-  const isFormDirty = formState ? JSON.stringify(formState) !== JSON.stringify(originalRecord) : false;
-
   return (
-    <div className="h-screen flex text-text-light dark:text-text-dark">
-      <Sidebar 
+    <div className="h-screen flex text-text-light dark:text-text-dark overflow-hidden">
+      <Sidebar
         patients={patients}
         selectedPatient={selectedPatient}
         selectedRecordId={selectedRecordId}
@@ -509,75 +391,72 @@ const App: React.FC = () => {
         onEditRecord={handleEdit}
         onSaveRecord={handleSaveRecord}
         onDeleteRecord={handleDeleteRecord}
-        isEditing={isEditing}
+        isEditing={isEditingRecord}
         isFormDirty={isFormDirty}
         isRecordSelected={!!selectedRecordId && !selectedRecordId.startsWith('new-')}
         doctors={doctors}
         onOpenDoctorModal={handleOpenDoctorModal}
         onDeleteDoctor={handleDeleteDoctor}
+        onEditRecordModal={handleEditRecordModal}
+        onDeleteRecordDirect={handleDeleteRecordDirect}
       />
       <div className="flex-1 flex flex-col overflow-hidden bg-background-light dark:bg-background-dark">
-        <Header 
+        <Header
             selectedPatient={selectedPatient}
             theme={theme}
             onToggleTheme={toggleTheme}
         />
-        <main className="flex-1 overflow-y-auto p-6">
-            {selectedPatient && formState ? (
-            <PatientDetails 
-                patient={selectedPatient}
-                selectedRecord={formState}
-                onFormChange={handleFormChange}
-                onFileUpload={handleFileUpload}
-                onDeleteDocument={handleDeleteDocument}
-                onRenameDocument={handleRenameDocument}
-                isEditing={isEditing}
-                onAddReminder={handleAddReminder}
-                onToggleReminder={handleToggleReminder}
-                onDeleteReminder={handleDeleteReminder}
-                onAddMedication={handleAddMedication}
-                onUpdateMedication={handleUpdateMedication}
-                onDeleteMedication={handleDeleteMedication}
-                doctors={doctors}
-            />
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6">
+            {selectedPatient ? (
+                formState ? (
+                    <PatientDetails
+                        patient={selectedPatient}
+                        selectedRecord={formState}
+                        onFormChange={handleFormChange}
+                        onFileUpload={handleFileUpload}
+                        onDeleteDocument={handleDeleteDocument}
+                        onRenameDocument={handleRenameDocument}
+                        isEditing={isEditingRecord}
+                        onAddReminder={handleAddReminder}
+                        onToggleReminder={handleToggleReminder}
+                        onDeleteReminder={handleDeleteReminder}
+                        onAddMedication={handleAddMedication}
+                        onUpdateMedication={handleUpdateMedication}
+                        onDeleteMedication={handleDeleteMedication}
+                        doctors={doctors}
+                    />
+                ) : (
+                    <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark">
+                        <div className="text-center">
+                            <span className="material-symbols-outlined text-6xl">folder_open</span>
+                            <p className="mt-4 text-lg font-medium">No records available</p>
+                            <p>This person has no medical records yet. Add a new record to get started.</p>
+                        </div>
+                    </div>
+                )
             ) : (
-            <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark">
-                <div className="text-center">
-                    <span className="material-symbols-outlined text-6xl">waving_hand</span>
-                    <p className="mt-4 text-lg font-medium">Welcome to Family Health Keeper</p>
-                    <p>Select a person from the sidebar to view their records, or add a new person to begin.</p>
+                <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark">
+                    <div className="text-center">
+                        <span className="material-symbols-outlined text-6xl">waving_hand</span>
+                        <p className="mt-4 text-lg font-medium">Welcome to Family Health Keeper</p>
+                        <p>Select a person from the sidebar to view their records, or add a new person to begin.</p>
+                    </div>
                 </div>
-            </div>
             )}
         </main>
       </div>
-       {isPatientFormOpen && (
+       {isPatientFormModalOpen && (
         <PatientFormModal
-          isOpen={isPatientFormOpen}
-          onClose={() => {
-            setIsPatientFormOpen(false);
-            setPatientToEdit(null);
-          }}
+          isOpen={isPatientFormModalOpen}
+          onClose={closePatientForm}
           onSave={handleSavePatient}
           editData={patientToEdit}
         />
       )}
-      {isEditingPatient && selectedPatient && (
-        <PatientEditModal
-            isOpen={isEditingPatient}
-            patient={selectedPatient}
-            onSave={handleUpdatePatient}
-            onClose={() => setIsEditingPatient(false)}
-            doctors={doctors}
-        />
-      )}
-      {isRecordFormOpen && (
+      {isRecordFormModalOpen && (
         <RecordFormModal
-          isOpen={isRecordFormOpen}
-          onClose={() => {
-            setIsRecordFormOpen(false);
-            setRecordToEdit(null);
-          }}
+          isOpen={isRecordFormModalOpen}
+          onClose={closeRecordForm}
           onSave={handleSaveRecordForm}
           editData={recordToEdit}
           doctors={doctors}
@@ -587,7 +466,7 @@ const App: React.FC = () => {
         isOpen={isDoctorModalOpen}
         doctor={doctorToEdit}
         onSave={handleSaveDoctor}
-        onClose={() => setIsDoctorModalOpen(false)}
+        onClose={closeDoctorModal}
       />
     </div>
   );

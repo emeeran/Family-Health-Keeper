@@ -9,13 +9,18 @@ interface DoctorEditModalProps {
 }
 
 const DoctorEditModal: React.FC<DoctorEditModalProps> = ({ isOpen, doctor, onSave, onClose }) => {
-    const [formData, setFormData] = useState({ name: '', specialty: '' });
+    const [formData, setFormData] = useState({ name: '', specialty: '', phone: '', address: '' });
 
     useEffect(() => {
         if (doctor) {
-            setFormData({ name: doctor.name, specialty: doctor.specialty });
+            setFormData({
+                name: doctor.name,
+                specialty: doctor.specialty,
+                phone: doctor.phone || '',
+                address: doctor.address || ''
+            });
         } else {
-            setFormData({ name: '', specialty: '' });
+            setFormData({ name: '', specialty: '', phone: '', address: '' });
         }
     }, [doctor, isOpen]);
 
@@ -26,14 +31,29 @@ const DoctorEditModal: React.FC<DoctorEditModalProps> = ({ isOpen, doctor, onSav
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('DoctorEditModal: handleSave called', { formData, doctor });
+
         if (!formData.name.trim() || !formData.specialty.trim()) {
             alert('Doctor name and specialty are required.');
             return;
         }
+
+        // Only include non-empty optional fields
+        const doctorData = {
+            name: formData.name.trim(),
+            specialty: formData.specialty.trim(),
+            ...(formData.phone.trim() && { phone: formData.phone.trim() }),
+            ...(formData.address.trim() && { address: formData.address.trim() })
+        };
+
+        console.log('DoctorEditModal: calling onSave with', doctorData);
+
         if (doctor) {
-            onSave({ ...doctor, ...formData });
+            console.log('DoctorEditModal: updating existing doctor', doctor.id);
+            onSave({ ...doctor, ...doctorData });
         } else {
-            onSave(formData);
+            console.log('DoctorEditModal: adding new doctor');
+            onSave(doctorData);
         }
     };
 
@@ -48,20 +68,30 @@ const DoctorEditModal: React.FC<DoctorEditModalProps> = ({ isOpen, doctor, onSav
                         <span className="material-symbols-outlined">close</span>
                     </button>
                 </div>
-                <form onSubmit={handleSave} className="p-6 space-y-4">
-                    <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-subtle-light dark:text-subtle-dark mb-1">Full Name</label>
-                        <input id="name" type="text" value={formData.name} onChange={handleChange} className="w-full rounded-md border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark shadow-sm focus:border-primary-DEFAULT focus:ring-primary-DEFAULT text-sm" required />
+                <form onSubmit={handleSave} className="flex flex-col">
+                    <div className="p-6 space-y-4">
+                        <div>
+                            <label htmlFor="name" className="block text-sm font-medium text-subtle-light dark:text-subtle-dark mb-1">Full Name</label>
+                            <input id="name" type="text" value={formData.name} onChange={handleChange} className="w-full rounded-md border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark shadow-sm focus:border-primary-DEFAULT focus:ring-primary-DEFAULT text-sm" required />
+                        </div>
+                        <div>
+                            <label htmlFor="specialty" className="block text-sm font-medium text-subtle-light dark:text-subtle-dark mb-1">Specialty</label>
+                            <input id="specialty" type="text" value={formData.specialty} onChange={handleChange} className="w-full rounded-md border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark shadow-sm focus:border-primary-DEFAULT focus:ring-primary-DEFAULT text-sm" required />
+                        </div>
+                        <div>
+                            <label htmlFor="phone" className="block text-sm font-medium text-subtle-light dark:text-subtle-dark mb-1">Mobile Number</label>
+                            <input id="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+91 98765 43210" className="w-full rounded-md border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark shadow-sm focus:border-primary-DEFAULT focus:ring-primary-DEFAULT text-sm" />
+                        </div>
+                        <div>
+                            <label htmlFor="address" className="block text-sm font-medium text-subtle-light dark:text-subtle-dark mb-1">Address</label>
+                            <input id="address" type="text" value={formData.address} onChange={handleChange} placeholder="Clinic/Hospital Address" className="w-full rounded-md border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark shadow-sm focus:border-primary-DEFAULT focus:ring-primary-DEFAULT text-sm" />
+                        </div>
                     </div>
-                    <div>
-                        <label htmlFor="specialty" className="block text-sm font-medium text-subtle-light dark:text-subtle-dark mb-1">Specialty</label>
-                        <input id="specialty" type="text" value={formData.specialty} onChange={handleChange} className="w-full rounded-md border-border-light dark:border-border-dark bg-input-bg-light dark:bg-input-bg-dark shadow-sm focus:border-primary-DEFAULT focus:ring-primary-DEFAULT text-sm" required />
+                    <div className="p-4 border-t border-border-light dark:border-border-dark flex items-center justify-end gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-b-lg">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-subtle-light dark:text-subtle-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Cancel</button>
+                        <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-primary-DEFAULT rounded-md hover:bg-primary-hover transition-colors">Save Doctor</button>
                     </div>
                 </form>
-                <div className="p-4 border-t border-border-light dark:border-border-dark flex items-center justify-end gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-b-lg">
-                    <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-subtle-light dark:text-subtle-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Cancel</button>
-                    <button type="button" onClick={handleSave} className="px-4 py-2 text-sm font-medium text-white bg-primary-DEFAULT rounded-md hover:bg-primary-hover transition-colors">Save Doctor</button>
-                </div>
             </div>
         </div>
     );
