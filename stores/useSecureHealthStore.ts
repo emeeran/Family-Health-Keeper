@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { secureStorage } from '../utils/secureStorage';
+import { secureStorage } from '../services/secureStorageService';
 import type { Patient, MedicalRecord, Doctor, Document, Reminder, Medication } from '../types';
 
 interface SecureHealthState {
@@ -42,6 +42,21 @@ interface SecureHealthState {
   toggleTheme: () => void;
   setSearchQuery: (query: string) => void;
   setIsEditing: (editing: boolean) => void;
+
+  // Document Actions
+  addDocument: (patientId: string, recordId: string, document: Document) => Promise<void>;
+  deleteDocument: (patientId: string, recordId: string, documentId: string) => Promise<void>;
+  renameDocument: (patientId: string, recordId: string, documentId: string, newName: string) => Promise<void>;
+
+  // Reminder Actions
+  addReminder: (patientId: string, reminder: Omit<Reminder, 'id'>) => Promise<void>;
+  toggleReminder: (patientId: string, reminderId: string) => Promise<void>;
+  deleteReminder: (patientId: string, reminderId: string) => Promise<void>;
+
+  // Medication Actions
+  addMedication: (patientId: string, medication: Omit<Medication, 'id'>) => Promise<void>;
+  updateMedication: (patientId: string, medication: Medication) => Promise<void>;
+  deleteMedication: (patientId: string, medicationId: string) => Promise<void>;
 
   // Utility Actions
   clearAllData: () => Promise<void>;
@@ -274,6 +289,197 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
       });
     } catch (error) {
       console.error('Failed to clear data:', error);
+    }
+  },
+
+  // Document Actions
+  addDocument: async (patientId: string, recordId: string, document: Document) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const recordIndex = updatedPatients[patientIndex].records.findIndex(r => r.id === recordId);
+
+        if (recordIndex !== -1) {
+          updatedPatients[patientIndex].records[recordIndex] = {
+            ...updatedPatients[patientIndex].records[recordIndex],
+            documents: [...updatedPatients[patientIndex].records[recordIndex].documents, document]
+          };
+
+          await secureStorage.savePatients(updatedPatients);
+          set({ patients: updatedPatients });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to add document:', error);
+    }
+  },
+
+  deleteDocument: async (patientId: string, recordId: string, documentId: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const recordIndex = updatedPatients[patientIndex].records.findIndex(r => r.id === recordId);
+
+        if (recordIndex !== -1) {
+          updatedPatients[patientIndex].records[recordIndex].documents =
+            updatedPatients[patientIndex].records[recordIndex].documents.filter(d => d.id !== documentId);
+
+          await secureStorage.savePatients(updatedPatients);
+          set({ patients: updatedPatients });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to delete document:', error);
+    }
+  },
+
+  renameDocument: async (patientId: string, recordId: string, documentId: string, newName: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const recordIndex = updatedPatients[patientIndex].records.findIndex(r => r.id === recordId);
+
+        if (recordIndex !== -1) {
+          updatedPatients[patientIndex].records[recordIndex].documents =
+            updatedPatients[patientIndex].records[recordIndex].documents.map(d =>
+              d.id === documentId ? { ...d, name: newName } : d
+            );
+
+          await secureStorage.savePatients(updatedPatients);
+          set({ patients: updatedPatients });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to rename document:', error);
+    }
+  },
+
+  // Reminder Actions
+  addReminder: async (patientId: string, reminder: Omit<Reminder, 'id'>) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const newReminder: Reminder = { ...reminder, id: `rem-${Date.now()}` };
+        updatedPatients[patientIndex] = {
+          ...updatedPatients[patientIndex],
+          reminders: [...updatedPatients[patientIndex].reminders, newReminder]
+        };
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to add reminder:', error);
+    }
+  },
+
+  toggleReminder: async (patientId: string, reminderId: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].reminders =
+          updatedPatients[patientIndex].reminders.map(r =>
+            r.id === reminderId ? { ...r, completed: !r.completed } : r
+          );
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to toggle reminder:', error);
+    }
+  },
+
+  deleteReminder: async (patientId: string, reminderId: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].reminders =
+          updatedPatients[patientIndex].reminders.filter(r => r.id !== reminderId);
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to delete reminder:', error);
+    }
+  },
+
+  // Medication Actions
+  addMedication: async (patientId: string, medication: Omit<Medication, 'id'>) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const newMedication: Medication = { ...medication, id: `med-${Date.now()}` };
+        updatedPatients[patientIndex] = {
+          ...updatedPatients[patientIndex],
+          currentMedications: [...updatedPatients[patientIndex].currentMedications, newMedication]
+        };
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to add medication:', error);
+    }
+  },
+
+  updateMedication: async (patientId: string, medication: Medication) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].currentMedications =
+          updatedPatients[patientIndex].currentMedications.map(m =>
+            m.id === medication.id ? medication : m
+          );
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to update medication:', error);
+    }
+  },
+
+  deleteMedication: async (patientId: string, medicationId: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].currentMedications =
+          updatedPatients[patientIndex].currentMedications.filter(m => m.id !== medicationId);
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to delete medication:', error);
     }
   },
 

@@ -102,9 +102,90 @@
           background-color: #ebe6ff;
         }
       }
+
+      /* Screen reader only content */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* Focus visible for better keyboard navigation */
+      .focus-visible:focus {
+        outline: 2px solid #3B82F6;
+        outline-offset: 2px;
+      }
+
+      /* Skip to main content link */
+      .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 6px;
+        background: #3B82F6;
+        color: white;
+        padding: 8px;
+        text-decoration: none;
+        border-radius: 4px;
+        z-index: 1000;
+        transition: top 0.3s;
+      }
+
+      .skip-link:focus {
+        top: 6px;
+      }
+
+      /* High contrast mode support */
+      @media (prefers-contrast: high) {
+        .border-gray-300 {
+          border-color: #000000;
+        }
+        .text-gray-600 {
+          color: #000000;
+        }
+        .bg-gray-50 {
+          background-color: #FFFFFF;
+        }
+      }
+
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      /* Print styles */
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+
+        body {
+          background: white !important;
+          color: black !important;
+        }
+
+        .bg-white, .bg-gray-50 {
+          background: white !important;
+        }
+      }
   </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark font-sans text-text-light dark:text-text-dark antialiased">
+  <a href="#main-content" class="skip-link">
+    Skip to main content
+  </a>
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

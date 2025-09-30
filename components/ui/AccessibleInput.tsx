@@ -1,113 +1,117 @@
 import React, { forwardRef } from 'react';
 
-export interface AccessibleInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+interface AccessibleInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
-  required?: boolean;
+  variant?: 'default' | 'filled' | 'outlined';
+  size?: 'sm' | 'md' | 'lg';
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  required?: boolean;
 }
 
-export const AccessibleInput = forwardRef<HTMLInputElement, AccessibleInputProps>(
-  (
-    {
-      label,
-      error,
-      helperText,
-      required = false,
-      leftIcon,
-      rightIcon,
-      id,
-      className = '',
-      ...props
-    },
-    ref
-  ) => {
-    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
-    const describedBy = [];
+const AccessibleInput = forwardRef<HTMLInputElement, AccessibleInputProps>(
+  ({
+    label,
+    error,
+    helperText,
+    variant = 'default',
+    size = 'md',
+    leftIcon,
+    rightIcon,
+    required = false,
+    className = '',
+    id,
+    ...props
+  }, ref) => {
+    const inputId = id || "input-" + Math.random().toString(36).substring(2, 9);
+    const errorId = error ? inputId + "-error" : undefined;
+    const helperId = helperText ? inputId + "-helper" : undefined;
 
-    if (error) {
-      describedBy.push(`${inputId}-error`);
-    }
-    if (helperText) {
-      describedBy.push(`${inputId}-helper`);
-    }
+    const baseStyles = 'block w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
-    const containerClassName = `
-      relative
-      ${className}
-    `.trim();
+    const variantStyles = {
+      default: 'border-gray-300 bg-white focus:border-blue-500 focus:ring-blue-500',
+      filled: 'border-transparent bg-gray-100 focus:border-blue-500 focus:ring-blue-500',
+      outlined: 'border-2 border-gray-300 bg-transparent focus:border-blue-500 focus:ring-blue-500',
+    };
 
-    const inputClassName = `
-      w-full px-3 py-2 text-sm border rounded-md
-      bg-white dark:bg-gray-800
-      text-gray-900 dark:text-white
-      placeholder-gray-500 dark:placeholder-gray-400
-      focus:ring-2 focus:ring-blue-500 focus:border-transparent
-      disabled:opacity-50 disabled:cursor-not-allowed
-      ${error
-        ? 'border-red-300 focus:ring-red-500 dark:border-red-600'
-        : 'border-gray-300 dark:border-gray-600'
-      }
-      ${leftIcon ? 'pl-10' : ''}
-      ${rightIcon ? 'pr-10' : ''}
-    `.trim().replace(/\s+/g, ' ');
+    const sizeStyles = {
+      sm: 'px-3 py-1.5 text-sm',
+      md: 'px-4 py-2 text-base',
+      lg: 'px-6 py-3 text-lg',
+    };
+
+    const paddingStyles = leftIcon && rightIcon ? 'pl-10 pr-10' : 
+                         leftIcon ? 'pl-10' : 
+                         rightIcon ? 'pr-10' : '';
+
+    const inputClasses = baseStyles + ' ' + variantStyles[variant] + ' ' + sizeStyles[size] + ' ' + paddingStyles + ' ' + className + ' ' +
+      (error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : '');
 
     return (
-      <div className={containerClassName}>
+      <div className="w-full">
         {label && (
-          <label
+          <label 
             htmlFor={inputId}
             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && (
+              <span className="text-red-500 ml-1" aria-label="required">
+                *
+              </span>
+            )}
           </label>
         )}
 
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              {leftIcon}
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span className="text-gray-400 sm:text-sm" aria-hidden="true">
+                {leftIcon}
+              </span>
             </div>
           )}
 
           <input
             ref={ref}
             id={inputId}
-            className={inputClassName}
-            aria-invalid={!!error}
-            aria-describedby={describedBy.length > 0 ? describedBy.join(' ') : undefined}
+            className={inputClasses}
+            aria-invalid={error ? 'true' : 'false'}
+            aria-describedby={[errorId, helperId].filter(Boolean).join(' ') || undefined}
             aria-required={required}
             {...props}
           />
 
           {rightIcon && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              {rightIcon}
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <span className="text-gray-400 sm:text-sm" aria-hidden="true">
+                {rightIcon}
+              </span>
             </div>
           )}
         </div>
 
         {error && (
-          <p
-            id={`${inputId}-error`}
+          <div 
+            id={errorId}
             className="mt-1 text-sm text-red-600 dark:text-red-400"
             role="alert"
+            aria-live="polite"
           >
             {error}
-          </p>
+          </div>
         )}
 
         {helperText && !error && (
-          <p
-            id={`${inputId}-helper`}
+          <div 
+            id={helperId}
             className="mt-1 text-sm text-gray-500 dark:text-gray-400"
           >
             {helperText}
-          </p>
+          </div>
         )}
       </div>
     );
@@ -115,3 +119,5 @@ export const AccessibleInput = forwardRef<HTMLInputElement, AccessibleInputProps
 );
 
 AccessibleInput.displayName = 'AccessibleInput';
+
+export default AccessibleInput;

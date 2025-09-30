@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { ImageCompressor, type CompressionResult, type CompressionOptions } from '../../utils/imageCompression';
-import { AccessibleButton } from './AccessibleButton';
-import { LoadingSpinner } from './LoadingSpinner';
+import AccessibleButton from './AccessibleButton';
+import LoadingSpinner from './LoadingSpinner';
 
 interface ImageUploadProps {
   onImageCompressed: (result: CompressionResult) => void;

@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Patient, MedicalRecord, Doctor } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
+import { ShareWithDoctor } from './ShareWithDoctor';
+import { WhatsAppShareService } from '../services/whatsappService';
 
 interface SidebarProps {
     patients: Patient[];
@@ -24,7 +26,7 @@ interface SidebarProps {
     doctors: Doctor[];
     onOpenDoctorModal: (doctor: Doctor | null) => void;
     onDeleteDoctor: (id: string) => void;
-    onEditRecordModal: (record: MedicalRecord) => void;
+    onEditRecord: (record: MedicalRecord) => void;
     onDeleteRecordDirect: (recordId: string) => void;
 }
 
@@ -221,6 +223,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                              <button onClick={() => selectedPatient && onExportPatientPdf(selectedPatient.id)} title="Export as PDF" aria-label="Export selected person's data as a PDF document" className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT">
                                 <span className="material-symbols-outlined text-base">picture_as_pdf</span>
                             </button>
+                            <ShareWithDoctor
+                                patient={selectedPatient}
+                                doctors={doctors}
+                                selectedRecordId={selectedRecordId}
+                                className="ml-1"
+                            />
                              <button onClick={onDeletePatient} title="Delete Person" aria-label="Delete selected person and all their records" className="p-1 text-subtle-light dark:text-subtle-dark hover:text-red-600">
                                 <span className="material-symbols-outlined text-base">delete</span>
                             </button>
@@ -354,12 +362,23 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                         </div>
                                                         <div className="flex items-center shrink-0 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
                                                             <button
-                                                                onClick={() => onEditRecordModal(record)}
+                                                                onClick={() => onEditRecord(record)}
                                                                 title="Edit Record"
                                                                 aria-label={`Edit record from ${record.date}`}
                                                                 className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                                                             >
                                                                 <span className="material-symbols-outlined text-base">edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const message = WhatsAppShareService.generateMedicalRecordSummary(selectedPatient!, record);
+                                                                    WhatsAppShareService.shareWhatsApp(message);
+                                                                }}
+                                                                title="Share Record via WhatsApp"
+                                                                aria-label={`Share record from ${record.date} via WhatsApp`}
+                                                                className="p-1 text-subtle-light dark:text-subtle-dark hover:text-green-600 rounded hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined text-base">share</span>
                                                             </button>
                                                             <button
                                                                 onClick={() => onDeleteRecordDirect(record.id)}
