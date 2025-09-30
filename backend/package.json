@@ -1,0 +1,51 @@
+{
+  "name": "family-health-keeper-backend",
+  "version": "1.0.0",
+  "description": "HIPAA-compliant backend for Family Health Keeper",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
+    "crypto": "^1.0.1",
+    "node-schedule": "^2.1.1",
+    "winston": "^3.11.0",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/pg": "^8.10.9",
+    "@types/node-schedule": "^2.1.5",
+    "@types/compression": "^1.7.5",
+    "@types/jest": "^29.5.8",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "eslint": "^8.54.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Family Health Keeper Team",
+  "license": "UNLICENSED"
+}

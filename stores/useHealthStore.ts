@@ -571,7 +571,7 @@ export const useHealthStore = create<HealthState>()(
       }
     }),
     {
-      name: 'health-storage',
+      name: 'health-storage-v2',
       partialize: (state) => ({
         patients: state.patients,
         doctors: state.doctors,

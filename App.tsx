@@ -13,6 +13,12 @@ import { useHealthStore } from './stores/useHealthStore';
 const MAX_FILE_SIZE_MB = 10;
 
 const App: React.FC = () => {
+  console.log('App component rendering...');
+
+  console.log('App: About to call useHealthStore...');
+
+  // Move the store destructuring outside the try block so variables are accessible
+  console.log('App: Calling useHealthStore...');
   const {
     patients,
     doctors,
@@ -67,8 +73,12 @@ const App: React.FC = () => {
     deleteMedication
   } = useHealthStore();
 
+  console.log('App: Successfully destructured all store variables');
+
+  // Now it's safe to use the destructured variables
   const selectedPatient = patients.find(p => p.id === selectedPatientId) || null;
 
+  // Move all hooks after the store destructuring
   useEffect(() => {
     const root = window.document.documentElement;
     if (theme === 'dark') {
@@ -81,7 +91,6 @@ const App: React.FC = () => {
   useEffect(() => {
     initializeData();
   }, []);
-
 
   const toggleTheme = () => {
     setStoreTheme(theme === 'dark' ? 'light' : 'dark');

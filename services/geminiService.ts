@@ -2,17 +2,23 @@
 import { GoogleGenAI } from "@google/genai";
 import type { MedicalRecord, Patient } from '../types';
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = import.meta.env.VITE_API_KEY;
 // Add Hugging Face credentials for fallback
-const HUGGING_FACE_API_KEY = process.env.HUGGING_FACE_API_KEY;
+const HUGGING_FACE_API_KEY = import.meta.env.VITE_HUGGING_FACE_API_KEY;
 const HUGGING_FACE_MODEL_URL = "https://api-inference.huggingface.co/models/google/medigemma";
+
+let ai: GoogleGenAI | null = null;
 
 if (!API_KEY) {
   // A more user-friendly error could be shown in the UI
-  console.error("API_KEY environment variable not set.");
+  console.error("API_KEY environment variable not set. AI features will be disabled.");
+} else {
+  try {
+    ai = new GoogleGenAI({ apiKey: API_KEY });
+  } catch (error) {
+    console.error("Failed to initialize Google AI:", error);
+  }
 }
-
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
 
 // Helper to check for quota errors specifically, to avoid falling back unnecessarily.
 const isQuotaError = (error: unknown): boolean => {
@@ -99,8 +105,8 @@ const generateContentWithHuggingFace = async (prompt: string, context: 'summary'
 };
 
 export const summarizeMedicalHistory = async (patient: Patient): Promise<string> => {
-  if (!API_KEY) {
-     return "API key is not configured. Please set the API_KEY environment variable.";
+  if (!ai || !API_KEY) {
+     return "AI features are not available. Please configure the API key to enable AI-powered summaries.";
   }
 
   const recordsSummary = patient.records.map(record => `
@@ -157,8 +163,8 @@ export const summarizeMedicalHistory = async (patient: Patient): Promise<string>
 
 
 export const getMedicalInsight = async (record: MedicalRecord, patient: Patient, insightType: string): Promise<string> => {
-  if (!API_KEY) {
-     return "API key is not configured. Please set the API_KEY environment variable.";
+  if (!ai || !API_KEY) {
+     return "AI features are not available. Please configure the API key to enable AI-powered insights.";
   }
 
   const tasks: Record<string, string> = {
