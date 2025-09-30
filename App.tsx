@@ -83,6 +83,7 @@ const App: React.FC = () => {
   const [isPatientFormModalOpen, setIsPatientFormModalOpen] = useState(false);
   const [isRecordFormModalOpen, setIsRecordFormModalOpen] = useState(false);
   const [isDoctorModalOpen, setIsDoctorModalOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null);
   const [recordToEdit, setRecordToEdit] = useState<MedicalRecord | null>(null);
   const [doctorToEdit, setDoctorToEdit] = useState<Doctor | null>(null);
@@ -492,7 +493,8 @@ const App: React.FC = () => {
         role="application"
         aria-label="Family Health Keeper Application"
       >
-        <Sidebar
+        <div className="hidden lg:block">
+          <Sidebar
           patients={patients}
           selectedPatient={selectedPatient}
           selectedPatientId={selectedPatientId}
@@ -524,13 +526,14 @@ const App: React.FC = () => {
           />
           <main
             id="main-content"
-            className="flex-1 overflow-y-auto overflow-x-hidden p-6"
+            className="flex-1 overflow-y-auto overflow-x-hidden p-6 animate-fade-in"
             role="main"
             tabIndex={-1}
           >
             {selectedPatient ? (
               formState ? (
-                <PatientDetails
+                <div className="animate-scale-in">
+                  <PatientDetails
                   patient={selectedPatient}
                   selectedRecord={formState}
                   onFormChange={handleFormChange}
@@ -546,25 +549,35 @@ const App: React.FC = () => {
                   onDeleteMedication={handleDeleteMedication}
                   doctors={doctors}
                 />
+                </div>
               ) : (
-                <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark">
+                <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark animate-fade-in">
                   <div className="text-center">
-                    <span className="material-symbols-outlined text-6xl">folder_open</span>
-                    <p className="mt-4 text-lg font-medium">No records available</p>
-                    <p>This person has no medical records yet. Add a new record to get started.</p>
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-surface-hover-light dark:bg-surface-hover-dark flex items-center justify-center animate-pulse-soft">
+                      <span className="material-symbols-outlined text-4xl">folder_open</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-text-light dark:text-text-dark mb-2">No records available</h3>
+                    <p className="text-sm text-subtle-light dark:text-subtle-dark max-w-md mx-auto">
+                      This person has no medical records yet. Add a new record to get started.
+                    </p>
                   </div>
                 </div>
               )
             ) : (
-              <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark">
+              <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark animate-fade-in">
                 <div className="text-center">
-                  <span className="material-symbols-outlined text-6xl">waving_hand</span>
-                  <p className="mt-4 text-lg font-medium">Welcome to Family Health Keeper</p>
-                  <p>Select a person from the sidebar to view their records, or add a new person to begin.</p>
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-100 to-secondary-100 dark:from-primary-900/20 dark:to-secondary-900/20 flex items-center justify-center animate-bounce-soft">
+                    <span className="material-symbols-outlined text-4xl text-primary-600 dark:text-primary-400">waving_hand</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-text-light dark:text-text-dark mb-2">Welcome to Family Health Keeper</h3>
+                  <p className="text-sm text-subtle-light dark:text-subtle-dark max-w-md mx-auto">
+                    Select a person from the sidebar to view their records, or add a new person to begin.
+                  </p>
                 </div>
               </div>
             )}
           </main>
+        </div>
         </div>
       </div>
 

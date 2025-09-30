@@ -132,21 +132,26 @@ export const ShareWithDoctor: React.FC<ShareWithDoctorProps> = ({
           />
 
           {/* Slide-in Panel */}
-          <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-800 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out">
+          <div className="fixed top-0 right-0 h-full w-full max-w-md bg-surface-light dark:bg-surface-dark shadow-panel z-50 transform transition-all-300 ease-out animate-slide-in-right">
             <div className="h-full flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    Share Medical Information
-                  </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {patient.name}'s medical details
-                  </p>
+              <div className="flex items-center justify-between p-6 border-b border-border-light dark:border-border-dark bg-gradient-to-r from-secondary-50 to-transparent dark:from-secondary-900/10 dark:to-transparent">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-lg">
+                    <span className="material-symbols-outlined text-white">share</span>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-text-light dark:text-text-dark">
+                      Share Medical Information
+                    </h2>
+                    <p className="text-sm text-subtle-light dark:text-subtle-dark">
+                      {patient.name}'s medical details
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="btn-ghost p-2 rounded-xl hover-lift"
                   title="Close"
                 >
                   <span className="material-symbols-outlined">close</span>

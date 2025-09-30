@@ -15,34 +15,178 @@
         extend: {
           colors: {
             primary: {
-              DEFAULT: "#3B82F6", // Blue 500
-              hover: "#2563EB",   // Blue 600
+              50: "#EFF6FF",
+              100: "#DBEAFE",
+              200: "#BFDBFE",
+              300: "#93C5FD",
+              400: "#60A5FA",
+              500: "#3B82F6",
+              600: "#2563EB",
+              700: "#1D4ED8",
+              800: "#1E40AF",
+              900: "#1E3A8A",
+              950: "#172554",
+              DEFAULT: "#3B82F6",
+              hover: "#2563EB",
             },
-            secondary: "#14B8A6", // Teal 500
+            secondary: {
+              50: "#F0FDFA",
+              100: "#CCFBF1",
+              200: "#99F6E4",
+              300: "#5EEAD4",
+              400: "#2DD4BF",
+              500: "#14B8A6",
+              600: "#0D9488",
+              700: "#0F766E",
+              800: "#115E59",
+              900: "#134E4A",
+              950: "#042F2E",
+              DEFAULT: "#14B8A6",
+            },
+            success: {
+              50: "#F0FDF4",
+              100: "#DCFCE7",
+              200: "#BBF7D0",
+              300: "#86EFAC",
+              400: "#4ADE80",
+              500: "#22C55E",
+              600: "#16A34A",
+              700: "#15803D",
+              800: "#166534",
+              900: "#14532D",
+              DEFAULT: "#22C55E",
+            },
+            warning: {
+              50: "#FFFBEB",
+              100: "#FEF3C7",
+              200: "#FDE68A",
+              300: "#FCD34D",
+              400: "#FBBF24",
+              500: "#F59E0B",
+              600: "#D97706",
+              700: "#B45309",
+              800: "#92400E",
+              900: "#78350F",
+              DEFAULT: "#F59E0B",
+            },
+            error: {
+              50: "#FEF2F2",
+              100: "#FEE2E2",
+              200: "#FECACA",
+              300: "#FCA5A5",
+              400: "#F87171",
+              500: "#EF4444",
+              600: "#DC2626",
+              700: "#B91C1C",
+              800: "#991B1B",
+              900: "#7F1D1D",
+              DEFAULT: "#EF4444",
+            },
             "background-light": "#FFFFFF",
-            "background-dark": "#111827",
-            "surface-light": "#F9FAFB",
-            "surface-dark": "#1F2937",
-            "text-light": "#1F2937",
-            "text-dark": "#F3F4F6",
-            "subtle-light": "#6B7280",
-            "subtle-dark": "#9CA3AF",
-            "border-light": "#E5E7EB",
-            "border-dark": "#374151",
+            "background-dark": "#0F172A",
+            "surface-light": "#F8FAFC",
+            "surface-dark": "#1E293B",
+            "surface-hover-light": "#F1F5F9",
+            "surface-hover-dark": "#334155",
+            "text-light": "#0F172A",
+            "text-dark": "#F8FAFC",
+            "subtle-light": "#64748B",
+            "subtle-dark": "#94A3B8",
+            "muted-light": "#94A3B8",
+            "muted-dark": "#64748B",
+            "border-light": "#E2E8F0",
+            "border-dark": "#334155",
             "input-bg-light": "#FFFFFF",
-            "input-bg-dark": "#374151",
+            "input-bg-dark": "#1E293B",
+            "ring-light": "#3B82F6",
+            "ring-dark": "#60A5FA",
           },
           fontFamily: {
-            sans: ["Inter", "sans-serif"],
+            sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+            mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+          },
+          fontSize: {
+            'xs': ['0.75rem', { lineHeight: '1rem' }],
+            'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+            'base': ['1rem', { lineHeight: '1.5rem' }],
+            'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+            'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+            '2xl': ['1.5rem', { lineHeight: '2rem' }],
+            '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+            '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+            '5xl': ['3rem', { lineHeight: '1' }],
+            '6xl': ['3.75rem', { lineHeight: '1' }],
           },
           borderRadius: {
-            lg: "0.5rem",
-            md: "0.375rem",
-            sm: "0.25rem",
+            'none': '0',
+            'sm': '0.125rem',
+            'DEFAULT': '0.25rem',
+            'md': '0.375rem',
+            'lg': '0.5rem',
+            'xl': '0.75rem',
+            '2xl': '1rem',
+            '3xl': '1.5rem',
+            'full': '9999px',
           },
           boxShadow: {
+            'none': '0',
+            'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+            'DEFAULT': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+            'md': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+            'lg': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+            'xl': '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+            '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+            'inner': 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
             'card': '0 2px 8px rgba(0, 0, 0, 0.06)',
-          }
+            'card-hover': '0 8px 30px rgba(0, 0, 0, 0.12)',
+            'panel': '0 10px 40px rgba(0, 0, 0, 0.12)',
+            'button': '0 2px 4px rgba(0, 0, 0, 0.1)',
+            'button-hover': '0 4px 12px rgba(0, 0, 0, 0.15)',
+          },
+          spacing: {
+            '18': '4.5rem',
+            '88': '22rem',
+            '128': '32rem',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-in-out',
+            'slide-in-right': 'slideInRight 0.3s ease-out',
+            'slide-in-left': 'slideInLeft 0.3s ease-out',
+            'scale-in': 'scaleIn 0.2s ease-out',
+            'bounce-soft': 'bounceSoft 0.6s ease-out',
+            'pulse-soft': 'pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideInRight: {
+              '0%': { transform: 'translateX(100%)', opacity: '0' },
+              '100%': { transform: 'translateX(0)', opacity: '1' },
+            },
+            slideInLeft: {
+              '0%': { transform: 'translateX(-100%)', opacity: '0' },
+              '100%': { transform: 'translateX(0)', opacity: '1' },
+            },
+            scaleIn: {
+              '0%': { transform: 'scale(0.95)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
+            },
+            bounceSoft: {
+              '0%, 20%, 53%, 80%, 100%': { transform: 'translateY(0)' },
+              '40%, 43%': { transform: 'translateY(-10px)' },
+              '70%': { transform: 'translateY(-5px)' },
+              '90%': { transform: 'translateY(-2px)' },
+            },
+            pulseSoft: {
+              '0%, 100%': { opacity: '1' },
+              '50%': { opacity: '0.7' },
+            },
+          },
+          backdropBlur: {
+            xs: '2px',
+          },
         },
       },
     };
@@ -179,6 +323,169 @@
         .bg-white, .bg-gray-50 {
           background: white !important;
         }
+      }
+
+      /* Enhanced UI Utilities */
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .dark .glass-effect {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .gradient-border {
+        position: relative;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 1px;
+        border-radius: 0.5rem;
+      }
+
+      .gradient-border > * {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+      }
+
+      .dark .gradient-border > * {
+        background: #1f2937;
+      }
+
+      /* Enhanced scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+      }
+
+      .dark ::-webkit-scrollbar-track {
+        background: #334155;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+        transition: background 0.2s;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      .dark ::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+
+      /* Enhanced transitions */
+      .transition-all-200 {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .transition-all-300 {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* Hover effects */
+      .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+
+      /* Focus styles */
+      .focus-ring {
+        @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900;
+      }
+
+      /* Loading states */
+      .loading-skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+      }
+
+      .dark .loading-skeleton {
+        background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+        background-size: 200% 100%;
+      }
+
+      @keyframes loading {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+
+      /* Enhanced button styles */
+      .btn-primary {
+        @apply bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg transition-all-200 focus-ring shadow-button hover:shadow-button-hover active:scale-95;
+      }
+
+      .btn-secondary {
+        @apply bg-surface-light hover:bg-surface-hover-light dark:bg-surface-dark dark:hover:bg-surface-hover-dark text-text-light dark:text-text-dark font-medium py-2 px-4 rounded-lg transition-all-200 focus-ring border border-border-light dark:border-border-dark hover:shadow-button active:scale-95;
+      }
+
+      .btn-ghost {
+        @apply bg-transparent hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark text-subtle-light dark:text-subtle-dark hover:text-text-light dark:hover:text-text-dark font-medium py-2 px-3 rounded-lg transition-all-200 focus-ring active:scale-95;
+      }
+
+      /* Card styles */
+      .card {
+        @apply bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg shadow-card transition-all-200;
+      }
+
+      .card-hover {
+        @apply card hover:shadow-card-hover hover-lift;
+      }
+
+      /* Input styles */
+      .input-base {
+        @apply bg-input-bg-light dark:bg-input-bg-dark border border-border-light dark:border-border-dark rounded-lg px-3 py-2 text-text-light dark:text-text-dark placeholder-subtle-light dark:placeholder-subtle-dark focus-ring transition-all-200;
+      }
+
+      .input-error {
+        @apply border-error-500 focus:ring-error-500;
+      }
+
+      /* Badge styles */
+      .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+      }
+
+      .badge-primary {
+        @apply badge bg-primary-100 text-primary-800 dark:bg-primary-900/20 dark:text-primary-300;
+      }
+
+      .badge-success {
+        @apply badge bg-success-100 text-success-800 dark:bg-success-900/20 dark:text-success-300;
+      }
+
+      .badge-warning {
+        @apply badge bg-warning-100 text-warning-800 dark:bg-warning-900/20 dark:text-warning-300;
+      }
+
+      .badge-error {
+        @apply badge bg-error-100 text-error-800 dark:bg-error-900/20 dark:text-error-300;
+      }
+
+      .badge-gray {
+        @apply badge bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300;
       }
   </style>
 </head>

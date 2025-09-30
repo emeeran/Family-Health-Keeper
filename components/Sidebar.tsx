@@ -188,22 +188,36 @@ const Sidebar: React.FC<SidebarProps> = ({
     const selectedDoctor = doctors.find(d => d.id === selectedRecord?.doctorId);
 
     return (
-        <aside className="w-80 bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex flex-col shrink-0 h-screen overflow-hidden">
+        <aside className="w-80 bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-sm border-r border-border-light/50 dark:border-border-dark/50 flex flex-col shrink-0 h-screen overflow-hidden shadow-lg">
             {/* Header */}
-            <div className="p-4 border-b border-border-light dark:border-border-dark flex items-center gap-2 shrink-0">
-                <span className="material-symbols-outlined text-3xl text-primary-DEFAULT">health_and_safety</span>
-                <h1 className="text-xl font-bold text-text-light dark:text-text-dark">Family Health Keeper</h1>
+            <div className="p-6 border-b border-border-light/50 dark:border-border-dark/50 flex items-center gap-3 shrink-0 bg-gradient-to-r from-primary-50 to-transparent dark:from-primary-900/10 dark:to-transparent">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg">
+                    <span className="material-symbols-outlined text-2xl text-white">health_and_safety</span>
+                </div>
+                <div>
+                    <h1 className="text-xl font-bold text-text-light dark:text-text-dark">Family Health Keeper</h1>
+                    <p className="text-xs text-subtle-light dark:text-subtle-dark">Medical Record Management</p>
+                </div>
             </div>
 
             {/* Top Actions */}
-            <div className="p-4 space-y-3 shrink-0 border-b border-border-light dark:border-border-dark">
-                <button onClick={onNewPatient} aria-label="Add a new family member" className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-white bg-secondary rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors">
-                    <span className="material-symbols-outlined text-base">person_add</span>
-                    <span>Add Person</span>
+            <div className="p-4 space-y-3 shrink-0 border-b border-border-light/50 dark:border-border-dark/50 bg-surface-hover-light/30 dark:bg-surface-hover-dark/30">
+                <button
+                    onClick={onNewPatient}
+                    aria-label="Add a new family member"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 rounded-xl transition-all-200 shadow-button hover:shadow-button-hover active:scale-95 focus-ring"
+                >
+                    <span className="material-symbols-outlined">person_add</span>
+                    <span>Add Family Member</span>
                 </button>
-                <button onClick={onNewRecord} disabled={!selectedPatient} aria-label="Add a new medical record for the selected person" className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-text-light dark:text-text-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span className="material-symbols-outlined text-base">add</span>
-                    <span>Add Record</span>
+                <button
+                    onClick={onNewRecord}
+                    disabled={!selectedPatient}
+                    aria-label="Add a new medical record for the selected person"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-text-light dark:text-text-dark bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark transition-all-200 shadow-sm hover:shadow-button disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none focus-ring"
+                >
+                    <span className="material-symbols-outlined">add_circle</span>
+                    <span>Add Medical Record</span>
                 </button>
             </div>
             
@@ -211,10 +225,16 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex-1 overflow-y-auto">
                 {/* Patients */}
                 <div className="p-4">
-                    <div className="flex justify-between items-center mb-2">
-                        <h2 className="text-sm font-semibold text-subtle-light dark:text-subtle-dark uppercase">Family Members</h2>
+                    <div className="flex justify-between items-center mb-3">
+                        <h2 className="text-sm font-semibold text-subtle-light dark:text-subtle-dark uppercase tracking-wide">Family Members</h2>
                         <div className="flex items-center gap-1">
-                            <button onClick={onEditPatient} title="Edit Person" aria-label="Edit details for selected person" className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT">
+                            <button
+                                onClick={onEditPatient}
+                                title="Edit Person"
+                                aria-label="Edit details for selected person"
+                                className="p-2 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark rounded-lg transition-all-200"
+                                disabled={!selectedPatient}
+                            >
                                 <span className="material-symbols-outlined text-base">edit</span>
                             </button>
                              <button onClick={() => selectedPatient && onExportPatient(selectedPatient.id)} title="Export as JSON" aria-label="Export selected person's data as a JSON file" className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT">
@@ -248,17 +268,38 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <ul className="space-y-1">
                         {filteredPatients.length > 0 ? filteredPatients.map(patient => {
                             const hasNewRecords = patient.records.some(r => r.isNew);
+                            const isSelected = selectedPatient?.id === patient.id;
                             return (
-                                <li key={patient.id}>
+                                <li key={patient.id} className="group">
                                     <a
                                         href="#"
                                         onClick={(e) => { e.preventDefault(); onSelectPatient(patient.id); }}
-                                        aria-current={selectedPatient?.id === patient.id ? 'page' : undefined}
-                                        className={`flex items-center gap-3 p-2 rounded-md transition-colors text-sm font-medium ${selectedPatient?.id === patient.id ? 'bg-primary-DEFAULT/10 text-primary-DEFAULT' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                                        aria-current={isSelected ? 'page' : undefined}
+                                        className={`flex items-center gap-3 p-3 rounded-xl transition-all-200 text-sm font-medium ${
+                                            isSelected
+                                                ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 shadow-sm border border-primary-200 dark:border-primary-800'
+                                                : 'hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark text-text-light dark:text-text-dark hover:shadow-sm'
+                                        }`}
                                     >
-                                        <img alt={patient.name} className="w-7 h-7 rounded-full" src={patient.avatarUrl} />
-                                        <span className="flex-1">{patient.name}</span>
-                                        {hasNewRecords && <span className="w-2.5 h-2.5 bg-secondary rounded-full" title="New Records"></span>}
+                                        <div className="relative">
+                                            <img
+                                                alt={patient.name}
+                                                className="w-8 h-8 rounded-full ring-2 ring-surface-light dark:ring-surface-dark group-hover:ring-primary-200 dark:group-hover:ring-primary-800 transition-all-200"
+                                                src={patient.avatarUrl}
+                                            />
+                                            {hasNewRecords && (
+                                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-secondary-500 rounded-full border-2 border-surface-light dark:border-surface-dark animate-pulse-soft" title="New Records"></span>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="truncate font-medium">{patient.name}</div>
+                                            <div className="text-xs text-subtle-light dark:text-subtle-dark truncate">
+                                                {patient.records.length} record{patient.records.length !== 1 ? 's' : ''}
+                                            </div>
+                                        </div>
+                                        {isSelected && (
+                                            <span className="material-symbols-outlined text-primary-600 dark:text-primary-400 text-sm">check_circle</span>
+                                        )}
                                     </a>
                                 </li>
                             );

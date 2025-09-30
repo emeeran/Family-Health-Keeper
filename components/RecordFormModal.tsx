@@ -157,27 +157,31 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
+        className="fixed inset-0 bg-black/60 z-40 transition-all-300 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Right Side Panel */}
-      <div className="fixed top-0 right-0 h-full w-full max-w-2xl bg-white dark:bg-gray-800 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out">
+      <div className="fixed top-0 right-0 h-full w-full max-w-2xl bg-surface-light dark:bg-surface-dark shadow-panel z-50 transform transition-all-300 ease-out animate-slide-in-right">
         <div className="h-full flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-lg">medical_information</span>
-                {editData ? 'Edit Medical Record' : 'Add Medical Record'}
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {editData ? 'Edit the details for this medical record' : 'Add a new medical record to the patient\'s history'}
-              </p>
+          <div className="flex items-center justify-between p-6 border-b border-border-light dark:border-border-dark bg-gradient-to-r from-surface-light to-surface-hover-light dark:from-surface-dark dark:to-surface-hover-dark">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg">
+                <span className="material-symbols-outlined text-white">medical_information</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-text-light dark:text-text-dark">
+                  {editData ? 'Edit Medical Record' : 'Add Medical Record'}
+                </h2>
+                <p className="text-sm text-subtle-light dark:text-subtle-dark">
+                  {editData ? 'Edit the details for this medical record' : 'Add a new medical record to the patient\'s history'}
+                </p>
+              </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="btn-ghost p-2 rounded-xl hover-lift"
               title="Close"
             >
               <span className="material-symbols-outlined">close</span>
@@ -185,12 +189,12 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Visit Information */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-700 p-3 rounded-lg border border-blue-100 dark:border-gray-600">
-                <h3 className="text-sm font-semibold mb-2 text-gray-800 dark:text-gray-200 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">event</span>
+              <div className="card p-4 bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/10 dark:to-secondary-900/10 border border-primary-200 dark:border-primary-800">
+                <h3 className="text-sm font-bold mb-3 text-primary-700 dark:text-primary-300 flex items-center gap-2 uppercase tracking-wide">
+                  <span className="material-symbols-outlined text-base">event</span>
                   Visit Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -203,7 +207,7 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
                       required
                       value={formData.date}
                       onChange={(e) => setFormData({...formData, date: e.target.value})}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="input-base text-sm"
                     />
                   </div>
                   <div>
@@ -213,7 +217,7 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
                     <select
                       value={formData.doctorId}
                       onChange={(e) => setFormData({...formData, doctorId: e.target.value})}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="input-base text-sm"
                     >
                       {doctors.length === 0 ? (
                         <option value="">No doctors available</option>
