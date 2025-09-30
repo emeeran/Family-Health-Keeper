@@ -297,16 +297,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 <span className="material-symbols-outlined text-sm">chevron_right</span>
                             </button>
                         </div>
-                         <div className="flex items-center gap-2 mb-3">
-                             <button onClick={onEditRecord} disabled={isEditing || !isRecordSelected} className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium text-text-light dark:text-text-dark bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="Edit Record" aria-label="Edit the selected medical record">
-                                <span className="material-symbols-outlined text-sm">edit</span>
-                                <span>Edit</span>
-                            </button>
-                             <button onClick={onDeleteRecord} disabled={!isRecordSelected} className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-red-700 rounded-md hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="Delete Record" aria-label="Delete the selected medical record">
-                                <span className="material-symbols-outlined text-sm">delete</span>
-                                <span>Delete</span>
-                            </button>
-                        </div>
                         {/* Persistent Save Button */}
                         {(isFormDirty || isEditing) && (
                             <div className="mb-3">
@@ -335,31 +325,51 @@ const Sidebar: React.FC<SidebarProps> = ({
                                        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-96' : 'max-h-0'}`}>
                                             <ul id={`records-${year}`} className="pl-3 pt-2 space-y-2 border-l-2 border-border-light dark:border-border-dark ml-2">
                                                 {groupedRecords[year].map(record => (
-                                                    <li key={record.id}>
-                                                        <a
-                                                            href="#"
-                                                            onClick={(e) => { e.preventDefault(); onSelectRecord(record.id); }}
-                                                            aria-current={selectedRecordId === record.id ? 'page' : undefined}
-                                                            className={`flex items-center gap-3 p-2 rounded-md transition-colors text-sm relative group ${
-                                                                selectedRecordId === record.id
-                                                                    ? 'bg-primary-DEFAULT/10'
-                                                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
-                                                            }`}
-                                                        >
-                                                            {selectedRecordId === record.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-DEFAULT rounded-r-full"></div>}
-                                                            <div className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full ${selectedRecordId === record.id ? 'bg-primary-DEFAULT/20 text-primary-DEFAULT' : 'bg-gray-200 dark:bg-gray-700 text-subtle-light dark:text-subtle-dark'}`}>
-                                                                <span className="material-symbols-outlined text-base">receipt_long</span>
-                                                            </div>
-                                                            <div className="flex-1 overflow-hidden">
-                                                                <p className={`font-semibold ${selectedRecordId === record.id ? 'text-primary-DEFAULT dark:text-indigo-400' : 'text-text-light dark:text-text-dark'}`}>
-                                                                    {record.date}
-                                                                </p>
-                                                                <p className="truncate text-subtle-light dark:text-subtle-dark text-xs">
-                                                                    {record.complaint || 'No complaint listed'}
-                                                                </p>
-                                                            </div>
-                                                            {record.isNew && <span className="w-2 h-2 mr-1 bg-secondary rounded-full" title="New Record"></span>}
-                                                        </a>
+                                                    <li key={record.id} className="flex items-center justify-between group">
+                                                        <div className="flex-1">
+                                                            <a
+                                                                href="#"
+                                                                onClick={(e) => { e.preventDefault(); onSelectRecord(record.id); }}
+                                                                aria-current={selectedRecordId === record.id ? 'page' : undefined}
+                                                                className={`flex items-center gap-3 p-2 rounded-md transition-colors text-sm relative ${
+                                                                    selectedRecordId === record.id
+                                                                        ? 'bg-primary-DEFAULT/10'
+                                                                        : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                                                                }`}
+                                                            >
+                                                                {selectedRecordId === record.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-DEFAULT rounded-r-full"></div>}
+                                                                <div className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full ${selectedRecordId === record.id ? 'bg-primary-DEFAULT/20 text-primary-DEFAULT' : 'bg-gray-200 dark:bg-gray-700 text-subtle-light dark:text-subtle-dark'}`}>
+                                                                    <span className="material-symbols-outlined text-base">receipt_long</span>
+                                                                </div>
+                                                                <div className="flex-1 overflow-hidden">
+                                                                    <p className={`font-semibold ${selectedRecordId === record.id ? 'text-primary-DEFAULT dark:text-indigo-400' : 'text-text-light dark:text-text-dark'}`}>
+                                                                        {record.date}
+                                                                    </p>
+                                                                    <p className="truncate text-subtle-light dark:text-subtle-dark text-xs">
+                                                                        {record.complaint || 'No complaint listed'}
+                                                                    </p>
+                                                                </div>
+                                                                {record.isNew && <span className="w-2 h-2 mr-1 bg-secondary rounded-full" title="New Record"></span>}
+                                                            </a>
+                                                        </div>
+                                                        <div className="flex items-center shrink-0 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
+                                                            <button
+                                                                onClick={() => onEditRecordModal(record)}
+                                                                title="Edit Record"
+                                                                aria-label={`Edit record from ${record.date}`}
+                                                                className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined text-base">edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => onDeleteRecordDirect(record.id)}
+                                                                title="Delete Record"
+                                                                aria-label={`Delete record from ${record.date}`}
+                                                                className="p-1 text-subtle-light dark:text-subtle-dark hover:text-red-600 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined text-base">delete</span>
+                                                            </button>
+                                                        </div>
                                                     </li>
                                                 ))}
                                            </ul>
