@@ -3,6 +3,7 @@
 import React, { useState, useEffect, memo } from 'react';
 import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor, Appointment } from '../types';
 import AIAssistant from './AIAssistant';
+import HealthInsights from './HealthInsights';
 import ReminderList from './ReminderList';
 import CurrentMedications from './CurrentMedications';
 import AppointmentManager from '../src/components/AppointmentManager';
@@ -168,7 +169,12 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
                     </div>
                 </div>
 
-                <CurrentMedications
+                <HealthInsights
+                patient={patient}
+                documents={patient.records?.flatMap(record => record.documents || []) || []}
+            />
+
+            <CurrentMedications
                 patient={patient}
                 onAddMedication={onAddMedication}
                 onUpdateMedication={onUpdateMedication}
@@ -190,9 +196,9 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
                     {isSummaryLoading ? 'Generating summary from patient records...' : historySummary}
                 </p>
             </div>
-            
-            <AIAssistant 
-                record={selectedRecord} 
+
+            <AIAssistant
+                record={selectedRecord}
                 history={historySummary || patient.medicalHistory}
                 patient={patient}
             />

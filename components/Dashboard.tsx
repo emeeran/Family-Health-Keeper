@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { Patient, MedicalRecord, Medication, Reminder, Doctor, Appointment } from '../types';
 import AppointmentManager from '../src/components/AppointmentManager';
 import AIAssistant from './AIAssistant';
+import HealthInsights from './HealthInsights';
 import CurrentMedications from './CurrentMedications';
 
 interface DashboardProps {
@@ -231,6 +232,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                 </div>
             </div>
+
+            {/* Health Insights */}
+            <HealthInsights
+                patient={patient}
+                documents={patient.records?.flatMap(record => record.documents || []) || []}
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Current Medications - Now Dynamic */}
