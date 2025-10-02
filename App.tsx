@@ -185,20 +185,21 @@ const App: React.FC = () => {
     const patient = patients.find(p => p.id === selectedPatientId);
     let record = null;
 
-    if (patient) {
+    if (patient && selectedRecordId) {
+      // Only look for a record if selectedRecordId is set
       record = patient.records.find(r => r.id === selectedRecordId) || null;
-      // If selected record doesn't exist but patient has records, select the first one
-      if (!record && patient.records.length > 0) {
-        record = patient.records[0];
-        setSelectedRecord(record.id);
-      }
     }
 
-    // Only update formState if the record actually changed
-    if (record?.id !== prev.formStateId) {
-      setFormStateRecord(record);
-      setOriginalRecord(record);
-      setIsEditing(false); // Default to read-only when selection changes
+    // Always update formState when selection changes (including to null)
+    console.log('Updating formState:', { 
+      recordId: record?.id, 
+      prevFormStateId: prev.formStateId,
+      selectedRecordId 
+    });
+    setFormStateRecord(record);
+    setOriginalRecord(record);
+    if (record) {
+      setIsEditing(false); // Default to read-only when a record is selected
     }
 
     // Update the ref with current values
@@ -207,7 +208,7 @@ const App: React.FC = () => {
       selectedRecordId,
       formStateId: record?.id
     };
-  }, [selectedPatientId, selectedRecordId, patients, setSelectedRecord]);
+  }, [selectedPatientId, selectedRecordId, patients]);
 
   const handleSelectPatient = (patientId: string) => {
     setSelectedPatient(patientId);
@@ -607,26 +608,14 @@ const App: React.FC = () => {
                   onViewDetails={() => {
                     // Dashboard can trigger actions if needed
                   }}
-                />
-                <PatientDetails
-                  patient={selectedPatient}
-                  selectedRecord={formState || selectedPatient.records[0]}
-                  onFormChange={handleFormChange}
-                  onFileUpload={handleFileUpload}
-                  onDeleteDocument={handleDeleteDocument}
-                  onRenameDocument={handleRenameDocument}
-                  isEditing={isEditingRecord}
-                  onAddReminder={handleAddReminder}
-                  onToggleReminder={handleToggleReminder}
-                  onDeleteReminder={handleDeleteReminder}
-                  onAddMedication={handleAddMedication}
-                  onUpdateMedication={handleUpdateMedication}
-                  onDeleteMedication={handleDeleteMedication}
+                  doctors={doctors}
                   onAddAppointment={handleAddAppointment}
                   onUpdateAppointment={handleUpdateAppointment}
                   onDeleteAppointment={handleDeleteAppointment}
                   onCreateReminderFromAppointment={handleCreateReminderFromAppointment}
-                  doctors={doctors}
+                  onAddMedication={handleAddMedication}
+                  onUpdateMedication={handleUpdateMedication}
+                  onDeleteMedication={handleDeleteMedication}
                 />
               </div>
             ) : (

@@ -1,12 +1,34 @@
 import React, { useMemo } from 'react';
-import type { Patient, MedicalRecord, Medication, Reminder } from '../types';
+import type { Patient, MedicalRecord, Medication, Reminder, Doctor, Appointment } from '../types';
+import AppointmentManager from '../src/components/AppointmentManager';
+import AIAssistant from './AIAssistant';
+import CurrentMedications from './CurrentMedications';
 
 interface DashboardProps {
     patient: Patient;
     onViewDetails: () => void;
+    doctors?: Doctor[];
+    onAddAppointment?: (patientId: string, appointment: Omit<Appointment, 'id' | 'createdAt'>) => void;
+    onUpdateAppointment?: (patientId: string, appointmentId: string, updates: Partial<Appointment>) => void;
+    onDeleteAppointment?: (patientId: string, appointmentId: string) => void;
+    onCreateReminderFromAppointment?: (patientId: string, appointmentId: string) => void;
+    onAddMedication?: (patientId: string, medication: Omit<Medication, 'id'>) => void;
+    onUpdateMedication?: (patientId: string, medication: Medication) => void;
+    onDeleteMedication?: (patientId: string, medicationId: string) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ patient, onViewDetails }) => {
+const Dashboard: React.FC<DashboardProps> = ({ 
+    patient, 
+    onViewDetails,
+    doctors = [],
+    onAddAppointment,
+    onUpdateAppointment,
+    onDeleteAppointment,
+    onCreateReminderFromAppointment,
+    onAddMedication,
+    onUpdateMedication,
+    onDeleteMedication,
+}) => {
     // Calculate health metrics and insights
     const healthMetrics = useMemo(() => {
         const totalRecords = patient.records.length;
@@ -211,46 +233,17 @@ const Dashboard: React.FC<DashboardProps> = ({ patient, onViewDetails }) => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Current Medications */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                        <h2 className="text-lg font-semibold text-text-light dark:text-text-dark flex items-center gap-2">
-                            <span className="material-symbols-outlined text-green-600">medication</span>
-                            Current Medications
-                        </h2>
+                {/* Current Medications - Now Dynamic */}
+                {onAddMedication && onUpdateMedication && onDeleteMedication && (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                        <CurrentMedications
+                            patient={patient}
+                            onAddMedication={onAddMedication}
+                            onUpdateMedication={onUpdateMedication}
+                            onDeleteMedication={onDeleteMedication}
+                        />
                     </div>
-                    <div className="p-4">
-                        {patient.currentMedications.length > 0 ? (
-                            <div className="space-y-3">
-                                {patient.currentMedications.slice(0, 5).map((medication) => (
-                                    <div key={medication.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-md">
-                                        <div>
-                                            <p className="font-medium text-text-light dark:text-text-dark">{medication.name}</p>
-                                            <p className="text-sm text-subtle-light dark:text-subtle-dark">
-                                                {medication.dosage} • {medication.frequency}
-                                            </p>
-                                            {medication.endDate && (
-                                                <p className="text-xs text-subtle-light dark:text-subtle-dark">
-                                                    Until: {new Date(medication.endDate).toLocaleDateString()}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <span className="material-symbols-outlined text-green-600">check_circle</span>
-                                    </div>
-                                ))}
-                                {patient.currentMedications.length > 5 && (
-                                    <p className="text-sm text-subtle-light dark:text-subtle-dark text-center">
-                                        +{patient.currentMedications.length - 5} more medications
-                                    </p>
-                                )}
-                            </div>
-                        ) : (
-                            <p className="text-subtle-light dark:text-subtle-dark text-center py-8">
-                                No current medications
-                            </p>
-                        )}
-                    </div>
-                </div>
+                )}
 
                 {/* Health Insights */}
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
@@ -283,6 +276,23 @@ const Dashboard: React.FC<DashboardProps> = ({ patient, onViewDetails }) => {
                             </p>
                         )}
                     </div>
+                </div>
+            </div>
+
+            {/* HealthGemma AI Insights */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-text-light dark:text-text-dark flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary-600">psychology</span>
+                        HealthGemma AI Insights
+                    </h2>
+                </div>
+                <div className="p-4">
+                    <AIAssistant
+                        record={patient.records[0]}
+                        history={patient.medicalHistory}
+                        patient={patient}
+                    />
                 </div>
             </div>
 
@@ -350,6 +360,20 @@ const Dashboard: React.FC<DashboardProps> = ({ patient, onViewDetails }) => {
                             ))}
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Appointments */}
+            {onAddAppointment && onUpdateAppointment && onDeleteAppointment && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <AppointmentManager
+                        patient={patient}
+                        doctors={doctors}
+                        onAddAppointment={onAddAppointment}
+                        onUpdateAppointment={onUpdateAppointment}
+                        onDeleteAppointment={onDeleteAppointment}
+                        onCreateReminderFromAppointment={onCreateReminderFromAppointment}
+                    />
                 </div>
             )}
         </div>
