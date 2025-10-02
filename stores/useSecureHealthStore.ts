@@ -102,8 +102,9 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
   addPatient: async (patient: Patient) => {
     try {
       await secureStorage.addPatient(patient);
-      const patients = await secureStorage.loadPatients();
-      set({ patients });
+      set((state) => ({
+        patients: [...state.patients, patient]
+      }));
     } catch (error) {
       console.error('Failed to add patient:', error);
     }
@@ -112,8 +113,11 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
   updatePatient: async (id: string, updates: Partial<Patient>) => {
     try {
       await secureStorage.updatePatient(id, updates);
-      const patients = await secureStorage.loadPatients();
-      set({ patients });
+      set((state) => ({
+        patients: state.patients.map(patient =>
+          patient.id === id ? { ...patient, ...updates } : patient
+        )
+      }));
     } catch (error) {
       console.error('Failed to update patient:', error);
     }
@@ -122,12 +126,11 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
   deletePatient: async (id: string) => {
     try {
       await secureStorage.deletePatient(id);
-      const patients = await secureStorage.loadPatients();
-      set({
-        patients,
-        selectedPatientId: null,
-        selectedRecordId: null
-      });
+      set((state) => ({
+        patients: state.patients.filter(patient => patient.id !== id),
+        selectedPatientId: state.selectedPatientId === id ? null : state.selectedPatientId,
+        selectedRecordId: state.selectedPatientId === id ? null : state.selectedRecordId
+      }));
     } catch (error) {
       console.error('Failed to delete patient:', error);
     }

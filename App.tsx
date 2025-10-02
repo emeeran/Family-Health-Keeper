@@ -5,13 +5,14 @@ import PatientDetails from './components/PatientDetails';
 import Dashboard from './components/Dashboard';
 import SecurityDashboard from './components/SecurityDashboard';
 import RecordDetailsPanel from './src/components/RecordDetailsPanel';
-import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor } from './types';
-import { generatePatientPdf } from './services/pdfService';
+import ModalManager from './components/ModalManager';
 import PatientFormModal from './components/PatientFormModal';
-import PatientEditModal from './components/PatientEditModal';
 import RecordFormModal from './components/RecordFormModal';
 import DoctorEditModal from './components/DoctorEditModal';
+import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor } from './types';
+import { generatePatientPdf } from './services/pdfService';
 import { useSecureHealthStore } from './stores/useSecureHealthStore';
+import { useAppHandlers } from './hooks/useAppHandlers';
 import {
   useDebounce,
   usePerformanceMonitor,

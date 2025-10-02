@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, memo } from 'react';
 import type { Patient, MedicalRecord, Doctor } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { ShareWithDoctor } from './ShareWithDoctor';
@@ -539,4 +539,4 @@ const Sidebar: React.FC<SidebarProps> = ({
     );
 };
 
-export default Sidebar;
+export default memo(Sidebar);

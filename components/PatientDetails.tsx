@@ -1,6 +1,6 @@
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor, Appointment } from '../types';
 import AIAssistant from './AIAssistant';
 import ReminderList from './ReminderList';
@@ -375,4 +375,4 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
     );
 };
 
-export default PatientDetails;
+export default memo(PatientDetails);
