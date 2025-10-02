@@ -62,6 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     const [recordSearchQuery, setRecordSearchQuery] = useState('');
     const debouncedRecordSearchQuery = useDebounce(recordSearchQuery, 300);
     const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set());
+    const [lastClickedRecord, setLastClickedRecord] = useState<{ id: string; timestamp: number } | null>(null);
 
     const filteredPatients = useMemo(() => {
         if (!debouncedSearchQuery) {
@@ -143,6 +144,25 @@ const Sidebar: React.FC<SidebarProps> = ({
     const handleNextRecord = () => {
         if (hasNextRecord) {
             onSelectRecord(sortedRecords[currentRecordIndex + 1].id);
+        }
+    };
+
+    // Handle double-click detection for records
+    const handleRecordClick = (recordId: string) => {
+        const now = Date.now();
+        const DOUBLE_CLICK_DELAY = 300; // milliseconds
+
+        if (
+            lastClickedRecord &&
+            lastClickedRecord.id === recordId &&
+            now - lastClickedRecord.timestamp < DOUBLE_CLICK_DELAY
+        ) {
+            // Double-click detected - open the record details panel
+            onSelectRecord(recordId);
+            setLastClickedRecord(null); // Reset after double-click
+        } else {
+            // Single click - just update the last clicked record
+            setLastClickedRecord({ id: recordId, timestamp: now });
         }
     };
     // --- End Record Navigation Logic ---
@@ -378,13 +398,16 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                         <div className="flex-1">
                                                             <a
                                                                 href="#"
-                                                                onClick={(e) => { e.preventDefault(); onSelectRecord(record.id); }}
+                                                                onClick={(e) => { e.preventDefault(); handleRecordClick(record.id); }}
                                                                 aria-current={selectedRecordId === record.id ? 'page' : undefined}
                                                                 className={`flex items-center gap-3 p-2 rounded-md transition-colors text-sm relative ${
                                                                     selectedRecordId === record.id
-                                                                        ? 'bg-primary-DEFAULT/10'
+                                                                        ? 'bg-primary-DEFAULT/10 ring-2 ring-primary-DEFAULT/30'
+                                                                        : lastClickedRecord?.id === record.id
+                                                                        ? 'bg-primary-DEFAULT/5 ring-1 ring-primary-DEFAULT/20'
                                                                         : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
                                                                 }`}
+                                                                title="Double-click to open record details"
                                                             >
                                                                 {selectedRecordId === record.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-DEFAULT rounded-r-full"></div>}
                                                                 <div className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full ${selectedRecordId === record.id ? 'bg-primary-DEFAULT/20 text-primary-DEFAULT' : 'bg-gray-200 dark:bg-gray-700 text-subtle-light dark:text-subtle-dark'}`}>

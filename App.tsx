@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import PatientDetails from './components/PatientDetails';
+import Dashboard from './components/Dashboard';
 import SecurityDashboard from './components/SecurityDashboard';
+import RecordDetailsPanel from './src/components/RecordDetailsPanel';
 import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor } from './types';
 import { generatePatientPdf } from './services/pdfService';
 import PatientFormModal from './components/PatientFormModal';
@@ -64,6 +66,10 @@ const App: React.FC = () => {
     addMedication,
     updateMedication,
     deleteMedication,
+    addAppointment,
+    updateAppointment,
+    deleteAppointment,
+    createReminderFromAppointment,
   } = useSecureHealthStore();
 
   // Now it's safe to use the destructured variables
@@ -245,6 +251,7 @@ const App: React.FC = () => {
           medicalHistory: patientData.medicalHistory || '',
           records: [],
           reminders: [],
+          appointments: [],
           currentMedications: [],
           dateOfBirth: patientData.dateOfBirth,
           gender: patientData.gender,
@@ -450,6 +457,24 @@ const App: React.FC = () => {
     deleteMedication(patientId, medicationId);
   };
 
+  // Appointment handlers
+  const handleAddAppointment = (patientId: string, appointmentData: Omit<import('./types').Appointment, 'id' | 'createdAt'>) => {
+    addAppointment(patientId, appointmentData);
+  };
+
+  const handleUpdateAppointment = (patientId: string, appointmentId: string, updates: Partial<import('./types').Appointment>) => {
+    updateAppointment(patientId, appointmentId, updates);
+  };
+
+  const handleDeleteAppointment = (patientId: string, appointmentId: string) => {
+    if (!window.confirm('Are you sure you want to delete this appointment?')) return;
+    deleteAppointment(patientId, appointmentId);
+  };
+
+  const handleCreateReminderFromAppointment = (patientId: string, appointmentId: string) => {
+    createReminderFromAppointment(patientId, appointmentId);
+  };
+
   // --- Doctor Handlers ---
   const handleOpenDoctorModal = (doctor: Doctor | null) => {
       openDoctorModal(doctor);
@@ -576,11 +601,16 @@ const App: React.FC = () => {
             tabIndex={-1}
           >
             {selectedPatient ? (
-              formState ? (
-                <div className="animate-scale-in">
-                  <PatientDetails
+              <div className="animate-scale-in">
+                <Dashboard 
+                  patient={selectedPatient} 
+                  onViewDetails={() => {
+                    // Dashboard can trigger actions if needed
+                  }}
+                />
+                <PatientDetails
                   patient={selectedPatient}
-                  selectedRecord={formState}
+                  selectedRecord={formState || selectedPatient.records[0]}
                   onFormChange={handleFormChange}
                   onFileUpload={handleFileUpload}
                   onDeleteDocument={handleDeleteDocument}
@@ -592,22 +622,13 @@ const App: React.FC = () => {
                   onAddMedication={handleAddMedication}
                   onUpdateMedication={handleUpdateMedication}
                   onDeleteMedication={handleDeleteMedication}
+                  onAddAppointment={handleAddAppointment}
+                  onUpdateAppointment={handleUpdateAppointment}
+                  onDeleteAppointment={handleDeleteAppointment}
+                  onCreateReminderFromAppointment={handleCreateReminderFromAppointment}
                   doctors={doctors}
                 />
-                </div>
-              ) : (
-                <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark animate-fade-in">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-surface-hover-light dark:bg-surface-hover-dark flex items-center justify-center animate-pulse-soft">
-                      <span className="material-symbols-outlined text-4xl">folder_open</span>
-                    </div>
-                    <h3 className="text-xl font-semibold text-text-light dark:text-text-dark mb-2">No records available</h3>
-                    <p className="text-sm text-subtle-light dark:text-subtle-dark max-w-md mx-auto">
-                      This person has no medical records yet. Add a new record to get started.
-                    </p>
-                  </div>
-                </div>
-              )
+              </div>
             ) : (
               <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark animate-fade-in">
                 <div className="text-center">
@@ -624,6 +645,25 @@ const App: React.FC = () => {
           </main>
         </div>
       </div>
+
+      {/* Record Details Slide-out Panel */}
+      {selectedPatient && formState && (
+        <RecordDetailsPanel
+          patient={selectedPatient}
+          record={formState}
+          isOpen={!!formState}
+          onClose={() => {
+            setSelectedRecord(null);
+            setFormStateRecord(null);
+          }}
+          onFormChange={handleFormChange}
+          onFileUpload={handleFileUpload}
+          onDeleteDocument={handleDeleteDocument}
+          onRenameDocument={handleRenameDocument}
+          isEditing={isEditingRecord}
+          doctors={doctors}
+        />
+      )}
 
       {(() => {
         console.log('isPatientFormModalOpen:', isPatientFormModalOpen);

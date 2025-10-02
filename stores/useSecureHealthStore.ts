@@ -32,7 +32,7 @@ interface SecureHealthState {
 
   // Actions - Records
   setSelectedPatient: (patientId: string) => void;
-  setSelectedRecord: (recordId: string) => void;
+  setSelectedRecord: (recordId: string | null) => void;
   addRecord: (patientId: string, record: MedicalRecord) => Promise<void>;
   updateRecord: (patientId: string, recordId: string, updates: Partial<MedicalRecord>) => Promise<void>;
   deleteRecord: (patientId: string, recordId: string) => Promise<void>;
@@ -57,6 +57,12 @@ interface SecureHealthState {
   addMedication: (patientId: string, medication: Omit<Medication, 'id'>) => Promise<void>;
   updateMedication: (patientId: string, medication: Medication) => Promise<void>;
   deleteMedication: (patientId: string, medicationId: string) => Promise<void>;
+
+  // Appointment Actions
+  addAppointment: (patientId: string, appointment: Omit<import('../types').Appointment, 'id' | 'createdAt'>) => Promise<void>;
+  updateAppointment: (patientId: string, appointmentId: string, updates: Partial<import('../types').Appointment>) => Promise<void>;
+  deleteAppointment: (patientId: string, appointmentId: string) => Promise<void>;
+  createReminderFromAppointment: (patientId: string, appointmentId: string) => Promise<void>;
 
   // Utility Actions
   clearAllData: () => Promise<void>;
@@ -185,7 +191,7 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
     });
   },
 
-  setSelectedRecord: (recordId: string) => {
+  setSelectedRecord: (recordId: string | null) => {
     set({ selectedRecordId: recordId });
   },
 
@@ -480,6 +486,126 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to delete medication:', error);
+    }
+  },
+
+  // Appointment Actions
+  addAppointment: async (patientId: string, appointment) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const newAppointment = {
+          ...appointment,
+          id: `apt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          createdAt: new Date().toISOString(),
+        };
+
+        if (!updatedPatients[patientIndex].appointments) {
+          updatedPatients[patientIndex].appointments = [];
+        }
+        
+        updatedPatients[patientIndex].appointments.push(newAppointment);
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to add appointment:', error);
+    }
+  },
+
+  updateAppointment: async (patientId: string, appointmentId: string, updates) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const appointmentIndex = updatedPatients[patientIndex].appointments?.findIndex(
+          a => a.id === appointmentId
+        );
+
+        if (appointmentIndex !== undefined && appointmentIndex !== -1) {
+          updatedPatients[patientIndex].appointments[appointmentIndex] = {
+            ...updatedPatients[patientIndex].appointments[appointmentIndex],
+            ...updates,
+            updatedAt: new Date().toISOString(),
+          };
+
+          await secureStorage.savePatients(updatedPatients);
+          set({ patients: updatedPatients });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update appointment:', error);
+    }
+  },
+
+  deleteAppointment: async (patientId: string, appointmentId: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].appointments =
+          updatedPatients[patientIndex].appointments?.filter(a => a.id !== appointmentId) || [];
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to delete appointment:', error);
+    }
+  },
+
+  createReminderFromAppointment: async (patientId: string, appointmentId: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const patient = patients[patientIndex];
+        const appointment = patient.appointments?.find(a => a.id === appointmentId);
+
+        if (appointment) {
+          const reminderDate = new Date(appointment.date);
+          
+          // Calculate reminder time based on reminderTime setting
+          if (appointment.reminderTime) {
+            if (appointment.reminderTime.includes('day')) {
+              const days = parseInt(appointment.reminderTime);
+              reminderDate.setDate(reminderDate.getDate() - (days || 1));
+            } else if (appointment.reminderTime.includes('hour')) {
+              const hours = parseInt(appointment.reminderTime);
+              reminderDate.setHours(reminderDate.getHours() - (hours || 1));
+            } else if (appointment.reminderTime.includes('minute')) {
+              const minutes = parseInt(appointment.reminderTime);
+              reminderDate.setMinutes(reminderDate.getMinutes() - (minutes || 15));
+            }
+          }
+
+          const newReminder: Omit<import('../types').Reminder, 'id'> = {
+            type: 'appointment',
+            title: `Appointment: ${appointment.reason}`,
+            date: reminderDate.toISOString().split('T')[0],
+            dueDate: appointment.date,
+            time: appointment.time,
+            completed: false,
+            priority: appointment.type === 'emergency' ? 'high' : 'medium',
+            appointmentId: appointment.id,
+            notes: `Reminder for appointment with doctor. Location: ${appointment.location || 'N/A'}`,
+          };
+
+          // Use existing addReminder method
+          await get().addReminder(patientId, newReminder);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to create reminder from appointment:', error);
     }
   },
 

@@ -1,10 +1,11 @@
 
 
 import React, { useState, useEffect } from 'react';
-import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor } from '../types';
+import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor, Appointment } from '../types';
 import AIAssistant from './AIAssistant';
 import ReminderList from './ReminderList';
 import CurrentMedications from './CurrentMedications';
+import AppointmentManager from '../src/components/AppointmentManager';
 import { summarizeMedicalHistory } from '../services/geminiService';
 
 interface PatientDetailsProps {
@@ -21,6 +22,10 @@ interface PatientDetailsProps {
     onAddMedication: (patientId: string, medication: Omit<Medication, 'id'>) => void;
     onUpdateMedication: (patientId: string, medication: Medication) => void;
     onDeleteMedication: (patientId: string, medicationId: string) => void;
+    onAddAppointment?: (patientId: string, appointment: Omit<Appointment, 'id' | 'createdAt'>) => void;
+    onUpdateAppointment?: (patientId: string, appointmentId: string, updates: Partial<Appointment>) => void;
+    onDeleteAppointment?: (patientId: string, appointmentId: string) => void;
+    onCreateReminderFromAppointment?: (patientId: string, appointmentId: string) => void;
     doctors: Doctor[];
 }
 
@@ -38,6 +43,10 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
     onAddMedication,
     onUpdateMedication,
     onDeleteMedication,
+    onAddAppointment,
+    onUpdateAppointment,
+    onDeleteAppointment,
+    onCreateReminderFromAppointment,
     doctors,
 }) => {
     console.log('PatientDetails component mounted/updated:', {
@@ -196,6 +205,17 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
                 reminderDefaults={reminderDefaults}
                 onReminderDefaultsHandled={() => setReminderDefaults(null)}
             />
+
+            {onAddAppointment && onUpdateAppointment && onDeleteAppointment && onCreateReminderFromAppointment && (
+                <AppointmentManager
+                    patient={patient}
+                    doctors={doctors}
+                    onAddAppointment={(appointment) => onAddAppointment(patient.id, appointment)}
+                    onUpdateAppointment={(appointmentId, updates) => onUpdateAppointment(patient.id, appointmentId, updates)}
+                    onDeleteAppointment={(appointmentId) => onDeleteAppointment(patient.id, appointmentId)}
+                    onCreateReminder={(appointmentId) => onCreateReminderFromAppointment(patient.id, appointmentId)}
+                />
+            )}
 
             <div className="pt-6 border-t border-border-light dark:border-border-dark">
                  <h4 className="text-lg font-semibold text-text-light dark:text-text-dark mb-4">Visit Details for {selectedRecord.date}</h4>
