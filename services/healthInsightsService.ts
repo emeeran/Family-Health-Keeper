@@ -183,7 +183,7 @@ ${JSON.stringify(healthData, null, 2)}
 - Consider age, gender, and individual health context
 - Focus on preventive and proactive health management
 
-**DISCLAIMER REQUIREMENT:** Always include: "These AI-generated insights are for informational purposes only and do not replace professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare providers for medical decisions."
+**DISCLAIMER REQUIREMENT:** Always include: "These insights are provided by Google Gemini AI models and are for informational purposes only. They do not replace professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare providers for medical decisions."
 `;
 
   try {
@@ -211,7 +211,7 @@ ${JSON.stringify(healthData, null, 2)}
         preventiveCare: extractListItems(aiResponse, "preventive"),
         lifestyleSuggestions: extractListItems(aiResponse, "lifestyle"),
         followUpCare: extractSection(aiResponse, "follow up"),
-        disclaimer: "These AI-generated insights are for informational purposes only and do not replace professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare providers for medical decisions."
+        disclaimer: "These insights are provided by Google Gemini AI models and are for informational purposes only. They do not replace professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare providers for medical decisions."
       };
     }
   } catch (error) {

@@ -110,6 +110,49 @@ export interface NotableEvent {
   description?: string;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  role: 'admin' | 'user' | 'family_member';
+  avatarUrl?: string;
+  createdAt: string;
+  updatedAt?: string;
+  lastLogin?: string;
+  isActive: boolean;
+  profileCompleted: boolean;
+}
+
+export interface AuthSession {
+  id: string;
+  userId: string;
+  token: string;
+  refreshToken?: string;
+  expiresAt: string;
+  createdAt: string;
+  deviceId?: string;
+  deviceInfo?: string;
+  isActive: boolean;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
+export interface RegisterData {
+  email: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  confirmPassword: string;
+  role?: 'admin' | 'user' | 'family_member';
+}
+
 export interface Patient {
   id: string;
   name: string;
@@ -131,4 +174,5 @@ export interface Patient {
   appointments: Appointment[];
   currentMedications: Medication[];
   primaryDoctorId?: string;
+  userId?: string; // Link to the user who owns this patient
 }

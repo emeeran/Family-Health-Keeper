@@ -1,4 +1,4 @@
-import type { Patient, Doctor, MedicalRecord, Reminder, Medication, Document } from '../types';
+import type { Patient, Doctor, MedicalRecord, Reminder, Medication, Document, User, AuthSession } from '../types';
 
 interface DatabaseSchema {
   patients: Patient;
@@ -7,12 +7,14 @@ interface DatabaseSchema {
   reminders: Reminder;
   medications: Medication;
   documents: Document;
+  users: User;
+  sessions: AuthSession;
 }
 
 class DatabaseService {
   private db: IDBDatabase | null = null;
   private readonly DB_NAME = 'FamilyHealthKeeperDB';
-  private readonly DB_VERSION = 1;
+  private readonly DB_VERSION = 2;
 
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -67,6 +69,24 @@ class DatabaseService {
         if (!db.objectStoreNames.contains('documents')) {
           const documentStore = db.createObjectStore('documents', { keyPath: 'id' });
           documentStore.createIndex('recordId', 'recordId', { unique: false });
+        }
+
+        // Create users store
+        if (!db.objectStoreNames.contains('users')) {
+          const userStore = db.createObjectStore('users', { keyPath: 'id' });
+          userStore.createIndex('email', 'email', { unique: true });
+          userStore.createIndex('username', 'username', { unique: true });
+          userStore.createIndex('role', 'role', { unique: false });
+          userStore.createIndex('isActive', 'isActive', { unique: false });
+        }
+
+        // Create sessions store
+        if (!db.objectStoreNames.contains('sessions')) {
+          const sessionStore = db.createObjectStore('sessions', { keyPath: 'id' });
+          sessionStore.createIndex('userId', 'userId', { unique: false });
+          sessionStore.createIndex('token', 'token', { unique: true });
+          sessionStore.createIndex('expiresAt', 'expiresAt', { unique: false });
+          sessionStore.createIndex('isActive', 'isActive', { unique: false });
         }
       };
     });
@@ -158,6 +178,63 @@ class DatabaseService {
     return this.delete('medications', id);
   }
 
+  // User operations
+  async getAllUsers(): Promise<User[]> {
+    return this.getAll<User>('users');
+  }
+
+  async getUser(id: string): Promise<User | null> {
+    return this.getById<User>('users', id);
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    return this.getByIndex<User>('users', 'email', email).then(users => users[0] || null);
+  }
+
+  async getUserByUsername(username: string): Promise<User | null> {
+    return this.getByIndex<User>('users', 'username', username).then(users => users[0] || null);
+  }
+
+  async saveUser(user: User): Promise<void> {
+    return this.save<User>('users', user);
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    return this.delete('users', id);
+  }
+
+  // Session operations
+  async getAllSessions(): Promise<AuthSession[]> {
+    return this.getAll<AuthSession>('sessions');
+  }
+
+  async getSession(id: string): Promise<AuthSession | null> {
+    return this.getById<AuthSession>('sessions', id);
+  }
+
+  async getSessionByToken(token: string): Promise<AuthSession | null> {
+    return this.getByIndex<AuthSession>('sessions', 'token', token).then(sessions => sessions[0] || null);
+  }
+
+  async getSessionsByUserId(userId: string): Promise<AuthSession[]> {
+    return this.getByIndex<AuthSession>('sessions', 'userId', userId);
+  }
+
+  async saveSession(session: AuthSession): Promise<void> {
+    return this.save<AuthSession>('sessions', session);
+  }
+
+  async deleteSession(id: string): Promise<void> {
+    return this.delete('sessions', id);
+  }
+
+  async deleteSessionsByUserId(userId: string): Promise<void> {
+    const sessions = await this.getSessionsByUserId(userId);
+    for (const session of sessions) {
+      await this.deleteSession(session.id);
+    }
+  }
+
   // Generic CRUD operations
   private getAll<T>(storeName: string): Promise<T[]> {
     return new Promise((resolve, reject) => {
@@ -242,7 +319,7 @@ class DatabaseService {
 
   // Clear all data (useful for testing)
   async clearAll(): Promise<void> {
-    const storeNames = ['patients', 'doctors', 'medicalRecords', 'reminders', 'medications', 'documents'];
+    const storeNames = ['patients', 'doctors', 'medicalRecords', 'reminders', 'medications', 'documents', 'users', 'sessions'];
 
     for (const storeName of storeNames) {
       await new Promise<void>((resolve, reject) => {
@@ -263,44 +340,48 @@ class DatabaseService {
 
   // Initialize with sample data if database is empty
   async initializeWithSampleData(): Promise<void> {
-    const patientsCount = (await this.getAllPatients()).length;
-    const doctorsCount = (await this.getAllDoctors()).length;
+    try {
+      const patientsCount = (await this.getAllPatients()).length;
+      const doctorsCount = (await this.getAllDoctors()).length;
 
-    if (patientsCount === 0 && doctorsCount === 0) {
-      // Import sample data
-      const { PATIENTS, DOCTORS } = await import('../constants');
+      if (patientsCount === 0 && doctorsCount === 0) {
+        // Import sample data
+        const { PATIENTS, DOCTORS } = await import('../constants');
 
-      // Save doctors first
-      for (const doctor of DOCTORS) {
-        await this.saveDoctor(doctor);
+        // Save doctors first
+        for (const doctor of DOCTORS) {
+          await this.saveDoctor(doctor);
+        }
+
+        // Save patients and their related data
+        for (const patient of PATIENTS) {
+          // Save patient without records and related data first
+          const patientToSave = {
+            ...patient,
+            records: [],
+            reminders: [],
+            currentMedications: []
+          };
+          await this.savePatient(patientToSave);
+
+          // Save medical records
+          for (const record of patient.records) {
+            await this.saveMedicalRecord(record);
+          }
+
+          // Save reminders
+          for (const reminder of patient.reminders) {
+            await this.saveReminder(reminder);
+          }
+
+          // Save medications
+          for (const medication of patient.currentMedications) {
+            await this.saveMedication(medication);
+          }
+        }
       }
-
-      // Save patients and their related data
-      for (const patient of PATIENTS) {
-        // Save patient without records and related data first
-        const patientToSave = {
-          ...patient,
-          records: [],
-          reminders: [],
-          currentMedications: []
-        };
-        await this.savePatient(patientToSave);
-
-        // Save medical records
-        for (const record of patient.records) {
-          await this.saveMedicalRecord(record);
-        }
-
-        // Save reminders
-        for (const reminder of patient.reminders) {
-          await this.saveReminder(reminder);
-        }
-
-        // Save medications
-        for (const medication of patient.currentMedications) {
-          await this.saveMedication(medication);
-        }
-      }
+    } catch (error) {
+      console.error('Failed to initialize sample data:', error);
     }
   }
 }

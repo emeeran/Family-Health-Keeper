@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import type { Patient, Medication } from '../types';
 
 interface MedicationModalProps {
@@ -181,7 +181,7 @@ interface CurrentMedicationsProps {
     onRequestReminder: (medicationData: Omit<Medication, 'id'>) => void;
 }
 
-const CurrentMedications: React.FC<CurrentMedicationsProps> = ({ patient, onAddMedication, onUpdateMedication, onDeleteMedication, onRequestReminder }) => {
+const CurrentMedications: React.FC<CurrentMedicationsProps> = memo(({ patient, onAddMedication, onUpdateMedication, onDeleteMedication, onRequestReminder }) => {
     const [modalState, setModalState] = useState<{ isOpen: boolean; medication: Medication | null }>({ isOpen: false, medication: null });
 
     const compactFrequency = (freq: string): string => {
@@ -282,6 +282,7 @@ const CurrentMedications: React.FC<CurrentMedicationsProps> = ({ patient, onAddM
                 )}
             </div>
 
+  
             <MedicationModal 
                 isOpen={modalState.isOpen}
                 medication={modalState.medication}
@@ -290,6 +291,8 @@ const CurrentMedications: React.FC<CurrentMedicationsProps> = ({ patient, onAddM
             />
         </div>
     );
-};
+});
+
+CurrentMedications.displayName = 'CurrentMedications';
 
 export default CurrentMedications;

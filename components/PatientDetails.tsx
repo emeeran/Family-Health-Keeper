@@ -169,10 +169,11 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
                     </div>
                 </div>
 
-                <HealthInsights
-                patient={patient}
-                documents={patient.records?.flatMap(record => record.documents || []) || []}
-            />
+  
+              <HealthInsights
+                    patient={patient}
+                    documents={patient.records?.flatMap(record => record.documents || []) || []}
+                />
 
             <CurrentMedications
                 patient={patient}

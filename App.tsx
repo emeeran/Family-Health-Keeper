@@ -9,8 +9,10 @@ import ModalManager from './components/ModalManager';
 import PatientFormModal from './components/PatientFormModal';
 import RecordFormModal from './components/RecordFormModal';
 import DoctorEditModal from './components/DoctorEditModal';
+import SimpleLogin from './components/SimpleLogin';
 import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor } from './types';
 import { generatePatientPdf } from './services/pdfService';
+import { simpleAuthService, type SimpleAuthState } from './services/simpleAuthService';
 import { useSecureHealthStore } from './stores/useSecureHealthStore';
 import { useAppHandlers } from './hooks/useAppHandlers';
 import {
@@ -26,16 +28,7 @@ const App: React.FC = () => {
   const { measureOperation } = usePerformanceMonitor('App');
   const { announcement, announce } = useAriaLive();
 
-  // Debounced console logging to reduce noise in production
-  const debouncedLog = useDebounce((message: string) => {
-    if (import.meta.env.DEV) {
-      console.log(message);
-    }
-  }, 1000);
-
-  debouncedLog('App component rendering...');
-
-  // Move the store destructuring outside the try block so variables are accessible
+  // Move all hook calls to the top to avoid hooks error
   const {
     patients,
     doctors,
@@ -73,15 +66,9 @@ const App: React.FC = () => {
     createReminderFromAppointment,
   } = useSecureHealthStore();
 
-  // Now it's safe to use the destructured variables
-  const selectedPatient = patients.find(p => p.id === selectedPatientId) || null;
-
-  // Ref to track previous values and prevent infinite loops
-  const previousValuesRef = useRef({
-    selectedPatientId,
-    selectedRecordId,
-    formStateId: null
-  });
+  // Simple authentication state
+  const [authState, setAuthState] = useState<SimpleAuthState>(simpleAuthService.getAuthState());
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   // UI State for modals and forms (handled locally since they're UI concerns)
   const [formState, setFormStateData] = useState<MedicalRecord | null>(null);
@@ -91,9 +78,43 @@ const App: React.FC = () => {
   const [isRecordFormModalOpen, setIsRecordFormModalOpen] = useState(false);
   const [isDoctorModalOpen, setIsDoctorModalOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null);
   const [recordToEdit, setRecordToEdit] = useState<MedicalRecord | null>(null);
   const [doctorToEdit, setDoctorToEdit] = useState<Doctor | null>(null);
+
+  // Debounced console logging to reduce noise in production
+  const debouncedLog = useDebounce((message: string) => {
+    if (import.meta.env.DEV) {
+      console.log(message);
+    }
+  }, 1000);
+
+  debouncedLog('App component rendering...');
+
+  // Show loading screen while checking auth
+  if (authState.isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background-light dark:bg-background-dark">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Now it's safe to use the destructured variables
+  const selectedPatient = patients.find(p => p.id === selectedPatientId) || null;
+  const selectedRecord = selectedPatient?.records.find(r => r.id === selectedRecordId);
+  const selectedDoctor = doctors.find(d => d.id === selectedRecord?.doctorId);
+
+  // Ref to track previous values and prevent infinite loops
+  const previousValuesRef = useRef({
+    selectedPatientId,
+    selectedRecordId,
+    formStateId: null
+  });
 
   // Modal handlers
   const openPatientForm = (patient: Patient | null) => {
@@ -130,6 +151,10 @@ const App: React.FC = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
   };
 
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
   const setFormStateRecord = (record: MedicalRecord | null) => {
     setFormStateData(record);
   };
@@ -156,6 +181,29 @@ const App: React.FC = () => {
         root.classList.remove('dark');
     }
   }, [theme]);
+
+  // Subscribe to simple auth state changes and clear any existing auth on mount
+  useEffect(() => {
+    // Clear any existing authentication data to prevent auto-login
+    localStorage.removeItem('simple_auth_user');
+    localStorage.removeItem('simple_auth_authenticated');
+
+    const unsubscribe = simpleAuthService.subscribe(setAuthState);
+
+    // Show login modal if not authenticated
+    if (!authState.isAuthenticated && !authState.isLoading) {
+      setIsLoginModalOpen(true);
+    }
+
+    return unsubscribe;
+  }, []);
+
+  // Show login modal if not authenticated
+  useEffect(() => {
+    if (!authState.isAuthenticated && !authState.isLoading) {
+      setIsLoginModalOpen(true);
+    }
+  }, [authState.isAuthenticated, authState.isLoading]);
 
   useEffect(() => {
     loadPatients();
@@ -477,6 +525,26 @@ const App: React.FC = () => {
     createReminderFromAppointment(patientId, appointmentId);
   };
 
+  // --- Simple Authentication Handlers ---
+  const handleOpenLogin = () => {
+    setIsLoginModalOpen(true);
+  };
+
+  const handleCloseLogin = () => {
+    setIsLoginModalOpen(false);
+  };
+
+  const handleLoginSuccess = () => {
+    setIsLoginModalOpen(false);
+  };
+
+  const handleLogout = async () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      await simpleAuthService.logout();
+      setIsLoginModalOpen(true);
+    }
+  };
+
   // --- Doctor Handlers ---
   const handleOpenDoctorModal = (doctor: Doctor | null) => {
       openDoctorModal(doctor);
@@ -519,125 +587,174 @@ const App: React.FC = () => {
       >
         {announcement}
       </div>
-      <div
-        className="h-screen flex text-text-light dark:text-text-dark overflow-hidden"
-        role="application"
-        aria-label="Family Health Keeper Application"
-      >
-        {/* Mobile Sidebar Overlay */}
-        {isMobileSidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-            onClick={toggleMobileSidebar}
-          />
-        )}
-        
-        {/* Mobile Sidebar */}
-        <div className={`fixed inset-y-0 left-0 z-50 lg:hidden transform transition-transform duration-300 ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <Sidebar
-            patients={patients}
-            selectedPatient={selectedPatient}
-            selectedPatientId={selectedPatientId}
-            selectedRecordId={selectedRecordId}
-            onNewPatient={handleNewPatient}
-            onNewRecord={handleNewRecord}
-            onSelectPatient={handleSelectPatient}
-            onSelectRecord={handleSelectRecord}
-            onEditPatient={handleEditPatient}
-            onDeletePatient={handleDeletePatient}
-            onExportPatient={handleExportPatient}
-            onExportPatientPdf={handleExportPatientPdf}
-            onEditRecord={handleEditRecordModal}
-            onSaveRecord={handleSaveRecord}
-            onDeleteRecord={handleDeleteRecord}
-            isEditing={isEditingRecord}
-            isFormDirty={isFormDirty}
-            isRecordSelected={!!selectedRecordId && !selectedRecordId.startsWith('new-')}
-            doctors={doctors}
-            onOpenDoctorModal={handleOpenDoctorModal}
-            onDeleteDoctor={handleDeleteDoctor}
-            onDeleteRecordDirect={handleDeleteRecordDirect}
-          />
-        </div>
 
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block">
-          <Sidebar
-            patients={patients}
-            selectedPatient={selectedPatient}
-            selectedPatientId={selectedPatientId}
-            selectedRecordId={selectedRecordId}
-            onNewPatient={handleNewPatient}
-            onNewRecord={handleNewRecord}
-            onSelectPatient={handleSelectPatient}
-            onSelectRecord={handleSelectRecord}
-            onEditPatient={handleEditPatient}
-            onDeletePatient={handleDeletePatient}
-            onExportPatient={handleExportPatient}
-            onExportPatientPdf={handleExportPatientPdf}
-            onEditRecord={handleEditRecordModal}
-            onSaveRecord={handleSaveRecord}
-            onDeleteRecord={handleDeleteRecord}
-            isEditing={isEditingRecord}
-            isFormDirty={isFormDirty}
-            isRecordSelected={!!selectedRecordId && !selectedRecordId.startsWith('new-')}
-            doctors={doctors}
-            onOpenDoctorModal={handleOpenDoctorModal}
-            onDeleteDoctor={handleDeleteDoctor}
-            onDeleteRecordDirect={handleDeleteRecordDirect}
-          />
-        </div>
+      {/* Only show the app content when authenticated */}
+      {authState.isAuthenticated ? (
+        <div
+          className="h-screen w-screen flex text-text-light dark:text-text-dark overflow-hidden fixed inset-0"
+          role="application"
+          aria-label="Family Health Keeper Application"
+        >
+          {/* Mobile Sidebar Overlay */}
+          {isMobileSidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+              onClick={toggleMobileSidebar}
+            />
+          )}
 
-        <div className="flex-1 flex flex-col overflow-hidden bg-background-light dark:bg-background-dark">
-          <Header
-            selectedPatient={selectedPatient}
-            theme={theme}
-            onToggleTheme={toggleTheme}
-            onMobileMenuToggle={toggleMobileSidebar}
-            showMobileMenuButton={true}
-          />
-          <main
-            id="main-content"
-            className="flex-1 overflow-y-auto overflow-x-hidden p-6 animate-fade-in"
-            role="main"
-            tabIndex={-1}
-          >
-            {selectedPatient ? (
-              <div className="animate-scale-in">
-                <Dashboard 
-                  patient={selectedPatient} 
-                  onViewDetails={() => {
-                    // Dashboard can trigger actions if needed
-                  }}
-                  doctors={doctors}
-                  onAddAppointment={handleAddAppointment}
-                  onUpdateAppointment={handleUpdateAppointment}
-                  onDeleteAppointment={handleDeleteAppointment}
-                  onCreateReminderFromAppointment={handleCreateReminderFromAppointment}
-                  onAddMedication={handleAddMedication}
-                  onUpdateMedication={handleUpdateMedication}
-                  onDeleteMedication={handleDeleteMedication}
-                />
-              </div>
-            ) : (
-              <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark animate-fade-in">
-                <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-100 to-secondary-100 dark:from-primary-900/20 dark:to-secondary-900/20 flex items-center justify-center animate-bounce-soft">
-                    <span className="material-symbols-outlined text-4xl text-primary-600 dark:text-primary-400">waving_hand</span>
-                  </div>
-                  <h3 className="text-xl font-semibold text-text-light dark:text-text-dark mb-2">Welcome to Family Health Keeper</h3>
-                  <p className="text-sm text-subtle-light dark:text-subtle-dark max-w-md mx-auto">
-                    Select a person from the sidebar to view their records, or add a new person to begin.
-                  </p>
-                </div>
+          {/* Mobile Sidebar */}
+          <div className={`fixed inset-y-0 left-0 z-50 lg:hidden transform transition-transform duration-300 ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <Sidebar
+              patients={patients}
+              selectedPatient={selectedPatient}
+              selectedPatientId={selectedPatientId}
+              selectedRecordId={selectedRecordId}
+              onNewPatient={handleNewPatient}
+              onNewRecord={handleNewRecord}
+              onSelectPatient={handleSelectPatient}
+              onSelectRecord={handleSelectRecord}
+              onEditPatient={handleEditPatient}
+              onDeletePatient={handleDeletePatient}
+              onExportPatient={handleExportPatient}
+              onExportPatientPdf={handleExportPatientPdf}
+              onEditRecord={handleEditRecordModal}
+              onSaveRecord={handleSaveRecord}
+              onDeleteRecord={handleDeleteRecord}
+              isEditing={isEditingRecord}
+              isFormDirty={isFormDirty}
+              isRecordSelected={!!selectedRecordId && !selectedRecordId.startsWith('new-')}
+              doctors={doctors}
+              onOpenDoctorModal={handleOpenDoctorModal}
+              onDeleteDoctor={handleDeleteDoctor}
+              onDeleteRecordDirect={handleDeleteRecordDirect}
+              isCollapsed={false}
+              onToggleCollapse={toggleSidebarCollapse}
+            />
+          </div>
+
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block">
+            <Sidebar
+              patients={patients}
+              selectedPatient={selectedPatient}
+              selectedPatientId={selectedPatientId}
+              selectedRecordId={selectedRecordId}
+              onNewPatient={handleNewPatient}
+              onNewRecord={handleNewRecord}
+              onSelectPatient={handleSelectPatient}
+              onSelectRecord={handleSelectRecord}
+              onEditPatient={handleEditPatient}
+              onDeletePatient={handleDeletePatient}
+              onExportPatient={handleExportPatient}
+              onExportPatientPdf={handleExportPatientPdf}
+              onEditRecord={handleEditRecordModal}
+              onSaveRecord={handleSaveRecord}
+              onDeleteRecord={handleDeleteRecord}
+              isEditing={isEditingRecord}
+              isFormDirty={isFormDirty}
+              isRecordSelected={!!selectedRecordId && !selectedRecordId.startsWith('new-')}
+              doctors={doctors}
+              onOpenDoctorModal={handleOpenDoctorModal}
+              onDeleteDoctor={handleDeleteDoctor}
+              onDeleteRecordDirect={handleDeleteRecordDirect}
+              isCollapsed={isSidebarCollapsed}
+              onToggleCollapse={toggleSidebarCollapse}
+            />
+          </div>
+
+          <div className="flex-1 flex flex-col overflow-hidden bg-background-light dark:bg-background-dark min-h-0">
+            <Header
+              selectedPatient={selectedPatient}
+              theme={theme}
+              onToggleTheme={toggleTheme}
+              onMobileMenuToggle={toggleMobileSidebar}
+              showMobileMenuButton={true}
+              user={authState.user ? {
+                id: authState.user.id,
+                email: authState.user.email,
+                username: authState.user.name,
+                firstName: authState.user.name.split(' ')[0],
+                lastName: authState.user.name.split(' ')[1] || '',
+                role: authState.user.role as 'admin' | 'user' | 'family_member',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                isActive: true,
+                profileCompleted: true
+              } : null}
+              onLogin={handleOpenLogin}
+              onLogout={handleLogout}
+              selectedDoctor={selectedDoctor}
+            />
+            {/* Expand sidebar button when collapsed */}
+            {isSidebarCollapsed && (
+              <div className="fixed left-4 top-24 z-20">
+                <button
+                  onClick={toggleSidebarCollapse}
+                  className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 hover:scale-105 focus-ring"
+                  title="Expand sidebar"
+                  aria-label="Expand navigation sidebar"
+                >
+                  <span className="material-symbols-outlined text-lg">chevron_right</span>
+                </button>
               </div>
             )}
-          </main>
-        </div>
-      </div>
 
-      {/* Record Details Slide-out Panel */}
-      {selectedPatient && formState && (
+            <main
+              id="main-content"
+              className="flex-1 overflow-y-auto overflow-x-hidden p-6 animate-fade-in min-h-0"
+              role="main"
+              tabIndex={-1}
+            >
+              {selectedPatient ? (
+                <div className="animate-scale-in">
+                  <Dashboard
+                    patient={selectedPatient}
+                    onViewDetails={() => {
+                      // Dashboard can trigger actions if needed
+                    }}
+                    doctors={doctors}
+                    onAddAppointment={handleAddAppointment}
+                    onUpdateAppointment={handleUpdateAppointment}
+                    onDeleteAppointment={handleDeleteAppointment}
+                    onCreateReminderFromAppointment={handleCreateReminderFromAppointment}
+                    onAddMedication={handleAddMedication}
+                    onUpdateMedication={handleUpdateMedication}
+                    onDeleteMedication={handleDeleteMedication}
+                  />
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark animate-fade-in">
+                  <div className="text-center">
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-100 to-secondary-100 dark:from-primary-900/20 dark:to-secondary-900/20 flex items-center justify-center animate-bounce-soft">
+                      <span className="material-symbols-outlined text-4xl text-primary-600 dark:text-primary-400">waving_hand</span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-text-light dark:text-text-dark mb-2">Welcome to Family Health Keeper</h3>
+                    <p className="text-sm text-subtle-light dark:text-subtle-dark max-w-md mx-auto">
+                      Select a person from the sidebar to view their records, or add a new person to begin.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </main>
+          </div>
+        </div>
+      ) : (
+        <div className="h-screen w-screen flex items-center justify-center bg-background-light dark:bg-background-dark fixed inset-0">
+          <div className="text-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 flex items-center justify-center animate-bounce-soft">
+              <span className="material-symbols-outlined text-4xl text-blue-600 dark:text-blue-400">lock</span>
+            </div>
+            <h3 className="text-xl font-semibold text-text-light dark:text-text-dark mb-2">Authentication Required</h3>
+            <p className="text-sm text-subtle-light dark:text-subtle-dark max-w-md mx-auto mb-6">
+              Please login to access your family health records.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Record Details Slide-out Panel - Only show when authenticated */}
+      {authState.isAuthenticated && selectedPatient && formState && (
         <RecordDetailsPanel
           patient={selectedPatient}
           record={formState}
@@ -655,36 +772,48 @@ const App: React.FC = () => {
         />
       )}
 
-      {(() => {
-        console.log('isPatientFormModalOpen:', isPatientFormModalOpen);
-        return isPatientFormModalOpen && (
-          <PatientFormModal
-            isOpen={isPatientFormModalOpen}
-            onClose={closePatientForm}
-            onSave={handleSavePatient}
-            editData={patientToEdit}
+      {/* Modals - Only show when authenticated */}
+      {authState.isAuthenticated && (
+        <>
+          {(() => {
+            console.log('isPatientFormModalOpen:', isPatientFormModalOpen);
+            return isPatientFormModalOpen && (
+              <PatientFormModal
+                isOpen={isPatientFormModalOpen}
+                onClose={closePatientForm}
+                onSave={handleSavePatient}
+                editData={patientToEdit}
+              />
+            );
+          })()}
+
+          {isRecordFormModalOpen && (
+            <RecordFormModal
+              isOpen={isRecordFormModalOpen}
+              onClose={closeRecordForm}
+              onSave={handleSaveRecordForm}
+              editData={recordToEdit}
+              doctors={doctors}
+            />
+          )}
+
+          <DoctorEditModal
+            isOpen={isDoctorModalOpen}
+            doctor={doctorToEdit}
+            onSave={handleSaveDoctor}
+            onClose={closeDoctorModal}
           />
-        );
-      })()}
-      
-      {isRecordFormModalOpen && (
-        <RecordFormModal
-          isOpen={isRecordFormModalOpen}
-          onClose={closeRecordForm}
-          onSave={handleSaveRecordForm}
-          editData={recordToEdit}
-          doctors={doctors}
-        />
+
+          <SecurityDashboard />
+        </>
       )}
-      
-      <DoctorEditModal
-        isOpen={isDoctorModalOpen}
-        doctor={doctorToEdit}
-        onSave={handleSaveDoctor}
-        onClose={closeDoctorModal}
+
+      {/* Simple Login Component - Always show but only when modal is open */}
+      <SimpleLogin
+        isOpen={isLoginModalOpen}
+        onClose={handleCloseLogin}
+        onLoginSuccess={handleLoginSuccess}
       />
-      
-      <SecurityDashboard />
     </>
   );
 };

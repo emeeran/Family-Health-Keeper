@@ -57,7 +57,7 @@ const HealthInsights: React.FC<HealthInsightsProps> = memo(({ patient, documents
         preventiveCare: ['Regular health screenings', 'Maintain healthy lifestyle', 'Monitor any changes in health'],
         lifestyleSuggestions: ['Balanced diet', 'Regular exercise', 'Adequate sleep', 'Stress management'],
         followUpCare: 'Schedule regular appointments with your healthcare provider to monitor your health status and adjust treatment plans as needed.',
-        disclaimer: 'These AI-generated insights are for informational purposes only and do not replace professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare providers for medical decisions.'
+        disclaimer: 'These insights are provided by Google Gemini AI models and are for informational purposes only. They do not replace professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare providers for medical decisions.'
       });
     } finally {
       setLoading(false);

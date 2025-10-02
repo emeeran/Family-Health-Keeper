@@ -233,6 +233,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </div>
 
+  
             {/* Health Insights */}
             <HealthInsights
                 patient={patient}

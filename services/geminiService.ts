@@ -187,7 +187,7 @@ export const getMedicalInsight = async (record: MedicalRecord, patient: Patient,
       3.  Clearly distinguish between drug-drug interactions (a current medication interacting with a newly prescribed one) and drug-condition interactions (a newly prescribed drug interacting with a condition from the medical history).
       4.  If no significant interactions are apparent, you must state: "Based on the information provided, no common drug-drug or drug-condition interactions were noted. However, this is not a substitute for a professional review."
       5.  **Crucially, do not provide direct medical advice.** Your role is to highlight points for discussion with a healthcare provider.
-      6.  Conclude with the mandatory disclaimer: "This information is AI-generated and not a complete list of all possible interactions. Always consult with your doctor or pharmacist about all medications and health conditions before making any changes."
+      6.  Conclude with the mandatory disclaimer: "This information is provided by Google Gemini AI models and not a complete list of all possible interactions. Always consult with your doctor or pharmacist about all medications and health conditions before making any changes."
     `,
     monitoring: `
       **Role:** You are an AI assistant focused on patient care and education.

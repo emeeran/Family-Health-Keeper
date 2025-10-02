@@ -28,6 +28,8 @@ interface SidebarProps {
     onDeleteDoctor: (id: string) => void;
     onEditRecord: (record: MedicalRecord) => void;
     onDeleteRecordDirect: (recordId: string) => void;
+    isCollapsed?: boolean;
+    onToggleCollapse?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -54,6 +56,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     onDeleteDoctor,
     onEditRecordModal,
     onDeleteRecordDirect,
+    isCollapsed = false,
+    onToggleCollapse,
 }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -208,43 +212,81 @@ const Sidebar: React.FC<SidebarProps> = ({
     const selectedDoctor = doctors.find(d => d.id === selectedRecord?.doctorId);
 
     return (
-        <aside className="w-80 bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-sm border-r border-border-light/50 dark:border-border-dark/50 flex flex-col shrink-0 h-screen overflow-hidden shadow-lg">
+        <aside className={`${isCollapsed ? 'w-16' : 'w-80'} bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-sm border-r border-border-light/50 dark:border-border-dark/50 flex flex-col shrink-0 h-screen overflow-hidden shadow-lg transition-all duration-300 ease-in-out`}>
             {/* Header */}
-            <div className="p-6 border-b border-border-light/50 dark:border-border-dark/50 flex items-center gap-3 shrink-0 bg-gradient-to-r from-primary-50 to-transparent dark:from-primary-900/10 dark:to-transparent">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg">
+            <div className="p-4 border-b border-border-light/50 dark:border-border-dark/50 flex items-center gap-3 shrink-0 bg-gradient-to-r from-primary-50 to-transparent dark:from-primary-900/10 dark:to-transparent">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-lg flex-shrink-0">
                     <span className="material-symbols-outlined text-2xl text-white">health_and_safety</span>
                 </div>
-                <div>
-                    <h1 className="text-xl font-bold text-text-light dark:text-text-dark">Family Health Keeper</h1>
-                    <p className="text-xs text-subtle-light dark:text-subtle-dark">Medical Record Management</p>
-                </div>
+                {!isCollapsed && (
+                    <div>
+                        <h1 className="text-xl font-bold text-text-light dark:text-text-dark">Family Health Keeper</h1>
+                        <p className="text-xs text-subtle-light dark:text-subtle-dark">Medical Record Management</p>
+                    </div>
+                )}
+                <button
+                    onClick={onToggleCollapse}
+                    className="ml-auto p-2 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark rounded-lg transition-all-200"
+                    title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                >
+                    <span className={`material-symbols-outlined text-base transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`}>
+                        chevron_left
+                    </span>
+                </button>
             </div>
 
             {/* Top Actions */}
-            <div className="p-4 space-y-3 shrink-0 border-b border-border-light/50 dark:border-border-dark/50 bg-surface-hover-light/30 dark:bg-surface-hover-dark/30">
-                <button
-                    onClick={onNewPatient}
-                    aria-label="Add a new family member"
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 rounded-xl transition-all-200 shadow-button hover:shadow-button-hover active:scale-95 focus-ring"
-                >
-                    <span className="material-symbols-outlined">person_add</span>
-                    <span>Add Family Member</span>
-                </button>
-                <button
-                    onClick={onNewRecord}
-                    disabled={!selectedPatient}
-                    aria-label="Add a new medical record for the selected person"
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-text-light dark:text-text-dark bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark transition-all-200 shadow-sm hover:shadow-button disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none focus-ring"
-                >
-                    <span className="material-symbols-outlined">add_circle</span>
-                    <span>Add Medical Record</span>
-                </button>
-            </div>
+            {!isCollapsed && (
+                <div className="p-4 space-y-3 shrink-0 border-b border-border-light/50 dark:border-border-dark/50 bg-surface-hover-light/30 dark:bg-surface-hover-dark/30">
+                    <button
+                        onClick={onNewPatient}
+                        aria-label="Add a new family member"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 rounded-xl transition-all-200 shadow-button hover:shadow-button-hover active:scale-95 focus-ring"
+                    >
+                        <span className="material-symbols-outlined">person_add</span>
+                        <span>Add Family Member</span>
+                    </button>
+                    <button
+                        onClick={onNewRecord}
+                        disabled={!selectedPatient}
+                        aria-label="Add a new medical record for the selected person"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-text-light dark:text-text-dark bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark transition-all-200 shadow-sm hover:shadow-button disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none focus-ring"
+                    >
+                        <span className="material-symbols-outlined">add_circle</span>
+                        <span>Add Medical Record</span>
+                    </button>
+                </div>
+            )}
+
+            {/* Collapsed Quick Actions */}
+            {isCollapsed && (
+                <div className="p-2 space-y-2 shrink-0 border-b border-border-light/50 dark:border-border-dark/50">
+                    <button
+                        onClick={onNewPatient}
+                        aria-label="Add a new family member"
+                        className="w-full p-3 text-secondary-500 hover:text-secondary-600 hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark rounded-lg transition-all-200"
+                        title="Add Family Member"
+                    >
+                        <span className="material-symbols-outlined text-2xl">person_add</span>
+                    </button>
+                    <button
+                        onClick={onNewRecord}
+                        disabled={!selectedPatient}
+                        aria-label="Add a new medical record for the selected person"
+                        className="w-full p-3 text-text-light dark:text-text-dark hover:text-primary-DEFAULT hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark rounded-lg transition-all-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Add Medical Record"
+                    >
+                        <span className="material-symbols-outlined text-2xl">add_circle</span>
+                    </button>
+                </div>
+            )}
             
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto">
-                {/* Patients */}
-                <div className="p-4">
+            {!isCollapsed && (
+                <div className="flex-1 overflow-y-auto">
+                    {/* Patients */}
+                    <div className="p-4">
                     <div className="flex justify-between items-center mb-3">
                         <h2 className="text-sm font-semibold text-subtle-light dark:text-subtle-dark uppercase tracking-wide">Family Members</h2>
                         <div className="flex items-center gap-1">
@@ -506,10 +548,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                         )}
                     </ul>
                 </div>
-            </div>
+                </div>
+            )}
 
             {/* Footer/Selected Doctor */}
-            <div className="p-4 border-t border-border-light dark:border-border-dark flex items-center justify-between shrink-0">
+            {!isCollapsed && (
+                <div className="p-4 border-t border-border-light dark:border-border-dark flex items-center justify-between shrink-0">
                  <div className="flex items-center gap-3">
                     <img
                         alt={selectedDoctor ? selectedDoctor.name : "No doctor selected"}
@@ -534,7 +578,23 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <span className="material-symbols-outlined text-base">edit</span>
                     </button>
                 )}
-            </div>
+                </div>
+            )}
+
+            {/* Collapsed Footer - Selected Doctor Icon */}
+            {isCollapsed && selectedDoctor && (
+                <div className="p-2 border-t border-border-light dark:border-border-dark flex justify-center shrink-0">
+                    <div className="relative">
+                        <img
+                            alt={selectedDoctor.name}
+                            className="w-8 h-8 rounded-full"
+                            src={`https://picsum.photos/id/${selectedDoctor.id}/200/200`}
+                            title={`Dr. ${selectedDoctor.name} - ${selectedDoctor.specialty}`}
+                        />
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-surface-light dark:border-surface-dark"></div>
+                    </div>
+                </div>
+            )}
         </aside>
     );
 };
