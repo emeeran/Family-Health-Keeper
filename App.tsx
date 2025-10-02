@@ -119,6 +119,10 @@ const App: React.FC = () => {
     setDoctorToEdit(null);
   };
 
+  const toggleMobileSidebar = () => {
+    setIsMobileSidebarOpen(!isMobileSidebarOpen);
+  };
+
   const setFormStateRecord = (record: MedicalRecord | null) => {
     setFormStateData(record);
   };
@@ -493,36 +497,77 @@ const App: React.FC = () => {
         role="application"
         aria-label="Family Health Keeper Application"
       >
+        {/* Mobile Sidebar Overlay */}
+        {isMobileSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={toggleMobileSidebar}
+          />
+        )}
+        
+        {/* Mobile Sidebar */}
+        <div className={`fixed inset-y-0 left-0 z-50 lg:hidden transform transition-transform duration-300 ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <Sidebar
+            patients={patients}
+            selectedPatient={selectedPatient}
+            selectedPatientId={selectedPatientId}
+            selectedRecordId={selectedRecordId}
+            onNewPatient={handleNewPatient}
+            onNewRecord={handleNewRecord}
+            onSelectPatient={handleSelectPatient}
+            onSelectRecord={handleSelectRecord}
+            onEditPatient={handleEditPatient}
+            onDeletePatient={handleDeletePatient}
+            onExportPatient={handleExportPatient}
+            onExportPatientPdf={handleExportPatientPdf}
+            onEditRecord={handleEditRecordModal}
+            onSaveRecord={handleSaveRecord}
+            onDeleteRecord={handleDeleteRecord}
+            isEditing={isEditingRecord}
+            isFormDirty={isFormDirty}
+            isRecordSelected={!!selectedRecordId && !selectedRecordId.startsWith('new-')}
+            doctors={doctors}
+            onOpenDoctorModal={handleOpenDoctorModal}
+            onDeleteDoctor={handleDeleteDoctor}
+            onDeleteRecordDirect={handleDeleteRecordDirect}
+          />
+        </div>
+
+        {/* Desktop Sidebar */}
         <div className="hidden lg:block">
           <Sidebar
-          patients={patients}
-          selectedPatient={selectedPatient}
-          selectedPatientId={selectedPatientId}
-          selectedRecordId={selectedRecordId}
-          onNewPatient={handleNewPatient}
-          onNewRecord={handleNewRecord}
-          onSelectPatient={handleSelectPatient}
-          onSelectRecord={handleSelectRecord}
-          onEditPatient={handleEditPatient}
-          onDeletePatient={handleDeletePatient}
-          onExportPatient={handleExportPatient}
-          onExportPatientPdf={handleExportPatientPdf}
-          onEditRecord={handleEditRecordModal}
-          onSaveRecord={handleSaveRecord}
-          onDeleteRecord={handleDeleteRecord}
-          isEditing={isEditingRecord}
-          isFormDirty={isFormDirty}
-          isRecordSelected={!!selectedRecordId && !selectedRecordId.startsWith('new-')}
-          doctors={doctors}
-          onOpenDoctorModal={handleOpenDoctorModal}
-          onDeleteDoctor={handleDeleteDoctor}
-          onDeleteRecordDirect={handleDeleteRecordDirect}
-        />
+            patients={patients}
+            selectedPatient={selectedPatient}
+            selectedPatientId={selectedPatientId}
+            selectedRecordId={selectedRecordId}
+            onNewPatient={handleNewPatient}
+            onNewRecord={handleNewRecord}
+            onSelectPatient={handleSelectPatient}
+            onSelectRecord={handleSelectRecord}
+            onEditPatient={handleEditPatient}
+            onDeletePatient={handleDeletePatient}
+            onExportPatient={handleExportPatient}
+            onExportPatientPdf={handleExportPatientPdf}
+            onEditRecord={handleEditRecordModal}
+            onSaveRecord={handleSaveRecord}
+            onDeleteRecord={handleDeleteRecord}
+            isEditing={isEditingRecord}
+            isFormDirty={isFormDirty}
+            isRecordSelected={!!selectedRecordId && !selectedRecordId.startsWith('new-')}
+            doctors={doctors}
+            onOpenDoctorModal={handleOpenDoctorModal}
+            onDeleteDoctor={handleDeleteDoctor}
+            onDeleteRecordDirect={handleDeleteRecordDirect}
+          />
+        </div>
+
         <div className="flex-1 flex flex-col overflow-hidden bg-background-light dark:bg-background-dark">
           <Header
             selectedPatient={selectedPatient}
             theme={theme}
             onToggleTheme={toggleTheme}
+            onMobileMenuToggle={toggleMobileSidebar}
+            showMobileMenuButton={true}
           />
           <main
             id="main-content"
@@ -578,17 +623,20 @@ const App: React.FC = () => {
             )}
           </main>
         </div>
-        </div>
       </div>
 
-      {isPatientFormModalOpen && (
-        <PatientFormModal
-          isOpen={isPatientFormModalOpen}
-          onClose={closePatientForm}
-          onSave={handleSavePatient}
-          editData={patientToEdit}
-        />
-      )}
+      {(() => {
+        console.log('isPatientFormModalOpen:', isPatientFormModalOpen);
+        return isPatientFormModalOpen && (
+          <PatientFormModal
+            isOpen={isPatientFormModalOpen}
+            onClose={closePatientForm}
+            onSave={handleSavePatient}
+            editData={patientToEdit}
+          />
+        );
+      })()}
+      
       {isRecordFormModalOpen && (
         <RecordFormModal
           isOpen={isRecordFormModalOpen}
@@ -598,12 +646,14 @@ const App: React.FC = () => {
           doctors={doctors}
         />
       )}
+      
       <DoctorEditModal
         isOpen={isDoctorModalOpen}
         doctor={doctorToEdit}
         onSave={handleSaveDoctor}
         onClose={closeDoctorModal}
       />
+      
       <SecurityDashboard />
     </>
   );
