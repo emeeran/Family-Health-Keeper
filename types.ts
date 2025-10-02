@@ -28,15 +28,37 @@ export interface MedicalRecord {
   isNew?: boolean;
 }
 
+export interface Appointment {
+  id: string;
+  doctorId: string;
+  patientId: string;
+  date: string;
+  time: string;
+  duration?: number; // in minutes
+  type: 'consultation' | 'followup' | 'procedure' | 'checkup' | 'emergency';
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'rescheduled';
+  reason: string;
+  notes?: string;
+  location?: string;
+  reminderSet?: boolean;
+  reminderTime?: string; // When to send reminder (e.g., '1 day before', '2 hours before')
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface Reminder {
-  id:string;
-  type: 'appointment' | 'medication';
+  id: string;
+  type: 'appointment' | 'medication' | 'test' | 'followup';
   title: string;
   date: string; // The date the reminder should appear/trigger
   dueDate?: string; // The actual deadline for the task
   time: string;
   completed: boolean;
   priority: 'high' | 'medium' | 'low';
+  appointmentId?: string; // Link to appointment if reminder is for appointment
+  medicationId?: string; // Link to medication if reminder is for medication
+  notes?: string;
+  notificationSent?: boolean;
 }
 
 export interface Medication {
@@ -106,6 +128,7 @@ export interface Patient {
   medicalImages?: any[]; // Using any for now to avoid circular imports
   records: MedicalRecord[];
   reminders: Reminder[];
+  appointments: Appointment[];
   currentMedications: Medication[];
   primaryDoctorId?: string;
 }
