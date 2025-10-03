@@ -269,19 +269,7 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
 
         <DrugInteractions medications={patient.currentMedications} />
 
-        <div style={{
-          border: '4px solid green',
-          background: 'yellow',
-          padding: '20px',
-          margin: '20px 0',
-          textAlign: 'center',
-          fontSize: '24px',
-          fontWeight: 'bold'
-        }}>
-          EYE CARE MODULE HERE
-          <EyeCareModule patientId={patient.id} />
-        </div>
-
+        
       <div className="space-y-2 pb-6 border-b border-border-light dark:border-border-dark">
         <div className="flex justify-between items-center">
           <h4 className="text-lg font-semibold text-text-light dark:text-text-dark">Medical History Summary</h4>

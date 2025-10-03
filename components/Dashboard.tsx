@@ -4,6 +4,7 @@ import AppointmentManager from '../src/components/AppointmentManager';
 import AIAssistant from './AIAssistant';
 import HealthInsights from './HealthInsights';
 import CurrentMedications from './CurrentMedications';
+import { EyeCareModule } from './EyeCareModule';
 
 interface DashboardProps {
     patient: Patient;
@@ -384,6 +385,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                     />
                 </div>
             )}
+
+            {/* Eye Care Module */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                <EyeCareModule patientId={patient.id} />
+            </div>
         </div>
     );
 };
