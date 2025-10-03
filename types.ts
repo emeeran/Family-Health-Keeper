@@ -154,6 +154,56 @@ export interface EyeRecord {
   notes?: string;
 }
 
+// Diabetes Management Types
+export interface HbA1cReading {
+  id: string;
+  date: string;
+  value: number; // in percentage (e.g., 6.5)
+  method: 'lab' | 'home' | 'cgm';
+  notes?: string;
+  doctorId?: string;
+}
+
+export interface BloodGlucoseReading {
+  id: string;
+  date: string;
+  time: string;
+  value: number; // in mg/dL
+  type: 'fasting' | 'postprandial' | 'random' | 'bedtime';
+  context?: string; // e.g., "before exercise", "after meal"
+  notes?: string;
+}
+
+export interface DiabetesMedication {
+  id: string;
+  name: string;
+  type: 'insulin' | 'oral' | 'injectable';
+  dosage: string;
+  frequency: string;
+  startDate: string;
+  endDate?: string;
+  notes?: string;
+}
+
+export interface DiabetesRecord {
+  id: string;
+  patientId: string;
+  diagnosisDate: string;
+  type: 'type1' | 'type2' | 'gestational' | 'prediabetes' | 'other';
+  hba1cReadings: HbA1cReading[];
+  bloodGlucoseReadings: BloodGlucoseReading[];
+  medications: DiabetesMedication[];
+  targetHba1c?: number; // typically <7.0%
+  targetGlucoseRanges: {
+    fasting: { min: number; max: number };
+    postprandial: { min: number; max: number };
+  };
+  complications?: string[];
+  notes?: string;
+  lastCheckup?: string;
+  nextCheckup?: string;
+}
+
 export interface HospitalId {
   id: string;
   hospitalName: string;
@@ -255,6 +305,7 @@ export interface Patient {
   appointments: Appointment[];
   currentMedications: Medication[];
   eyeRecord?: EyeRecord; // Eye care record
+  diabetesRecord?: DiabetesRecord; // Diabetes management record
   primaryDoctorId?: string;
   userId?: string; // Link to the user who owns this patient
 }
