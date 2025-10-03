@@ -45,6 +45,20 @@ interface AppStore extends AppState, BackupState, EyeCareState {
   exportPatient: (patientId: string) => void;
   exportPatientPdf: (patientId: string) => Promise<void>;
 
+  // Eye Care Actions
+  initializeEyeRecord: (patientId: string) => void;
+  addEyePrescription: (patientId: string, prescription: any) => { success: boolean; error?: string };
+  updateEyePrescription: (patientId: string, prescriptionId: string, updates: any) => void;
+  deleteEyePrescription: (patientId: string, prescriptionId: string) => void;
+  addEyeTest: (patientId: string, test: any) => { success: boolean; error?: string };
+  updateEyeTest: (patientId: string, testId: string, updates: any) => void;
+  deleteEyeTest: (patientId: string, testId: string) => void;
+  addEyeCondition: (patientId: string, condition: any) => { success: boolean; error?: string };
+  updateEyeCondition: (patientId: string, conditionId: string, updates: any) => void;
+  deleteEyeCondition: (patientId: string, conditionId: string) => void;
+  setCurrentGlasses: (patientId: string, prescriptionId: string) => void;
+  setCurrentContacts: (patientId: string, prescriptionId: string) => void;
+
   // Doctor Actions
   setDoctors: (doctors: AppState['doctors']) => void;
   addDoctor: (doctor: Omit<AppState['doctors'][0], 'id'>) => { success: boolean; error?: string; doctor?: AppState['doctors'][0] };
@@ -234,6 +248,133 @@ export const useAppStore = create<AppStore>()(
 
       exportPatientPdf: (patientId) => {
         return usePatientStore.getState().exportPatientPdf(patientId);
+      },
+
+      // Eye Care Actions - directly implemented
+      initializeEyeRecord: (patientId) => {
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId && !p.eyeRecord
+              ? { ...p, eyeRecord: { id: `eye-${Date.now()}`, patientId, prescriptions: [], tests: [], conditions: [], surgeries: [], medications: [], notes: '' }}
+              : p
+          ),
+        }));
+      },
+
+      addEyePrescription: (patientId, prescription) => {
+        const newPrescription = { ...prescription, id: `eyerx-${Date.now()}` };
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId
+              ? { ...p, eyeRecord: { ...(p.eyeRecord || { id: `eye-${Date.now()}`, patientId, prescriptions: [], tests: [], conditions: [], surgeries: [], medications: [], notes: '' }), prescriptions: [...(p.eyeRecord?.prescriptions || []), newPrescription] }}
+              : p
+          ),
+        }));
+        return { success: true };
+      },
+
+      updateEyePrescription: (patientId, prescriptionId, updates) => {
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId && p.eyeRecord
+              ? { ...p, eyeRecord: { ...p.eyeRecord, prescriptions: p.eyeRecord.prescriptions.map(rx => rx.id === prescriptionId ? { ...rx, ...updates } : rx) }}
+              : p
+          ),
+        }));
+      },
+
+      deleteEyePrescription: (patientId, prescriptionId) => {
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId && p.eyeRecord
+              ? { ...p, eyeRecord: { ...p.eyeRecord, prescriptions: p.eyeRecord.prescriptions.filter(rx => rx.id !== prescriptionId) }}
+              : p
+          ),
+        }));
+      },
+
+      addEyeTest: (patientId, test) => {
+        const newTest = { ...test, id: `eyetest-${Date.now()}` };
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId
+              ? { ...p, eyeRecord: { ...(p.eyeRecord || { id: `eye-${Date.now()}`, patientId, prescriptions: [], tests: [], conditions: [], surgeries: [], medications: [], notes: '' }), tests: [...(p.eyeRecord?.tests || []), newTest] }}
+              : p
+          ),
+        }));
+        return { success: true };
+      },
+
+      updateEyeTest: (patientId, testId, updates) => {
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId && p.eyeRecord
+              ? { ...p, eyeRecord: { ...p.eyeRecord, tests: p.eyeRecord.tests.map(test => test.id === testId ? { ...test, ...updates } : test) }}
+              : p
+          ),
+        }));
+      },
+
+      deleteEyeTest: (patientId, testId) => {
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId && p.eyeRecord
+              ? { ...p, eyeRecord: { ...p.eyeRecord, tests: p.eyeRecord.tests.filter(test => test.id !== testId) }}
+              : p
+          ),
+        }));
+      },
+
+      addEyeCondition: (patientId, condition) => {
+        const newCondition = { ...condition, id: `eyecond-${Date.now()}` };
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId
+              ? { ...p, eyeRecord: { ...(p.eyeRecord || { id: `eye-${Date.now()}`, patientId, prescriptions: [], tests: [], conditions: [], surgeries: [], medications: [], notes: '' }), conditions: [...(p.eyeRecord?.conditions || []), newCondition] }}
+              : p
+          ),
+        }));
+        return { success: true };
+      },
+
+      updateEyeCondition: (patientId, conditionId, updates) => {
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId && p.eyeRecord
+              ? { ...p, eyeRecord: { ...p.eyeRecord, conditions: p.eyeRecord.conditions.map(cond => cond.id === conditionId ? { ...cond, ...updates } : cond) }}
+              : p
+          ),
+        }));
+      },
+
+      deleteEyeCondition: (patientId, conditionId) => {
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId && p.eyeRecord
+              ? { ...p, eyeRecord: { ...p.eyeRecord, conditions: p.eyeRecord.conditions.filter(cond => cond.id !== conditionId) }}
+              : p
+          ),
+        }));
+      },
+
+      setCurrentGlasses: (patientId, prescriptionId) => {
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId && p.eyeRecord
+              ? { ...p, eyeRecord: { ...p.eyeRecord, currentGlasses: prescriptionId }}
+              : p
+          ),
+        }));
+      },
+
+      setCurrentContacts: (patientId, prescriptionId) => {
+        set((state) => ({
+          patients: state.patients.map(p =>
+            p.id === patientId && p.eyeRecord
+              ? { ...p, eyeRecord: { ...p.eyeRecord, currentContacts: prescriptionId }}
+              : p
+          ),
+        }));
       },
 
       // Actions from Doctor Store
