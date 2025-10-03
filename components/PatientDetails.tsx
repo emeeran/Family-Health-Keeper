@@ -53,10 +53,12 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
 }) => {
     console.log('PatientDetails component mounted/updated:', {
         patientName: patient.name,
+        patientId: patient.id,
         selectedRecordId: selectedRecord.id,
         isEditing,
         isNewRecord: selectedRecord.id.startsWith('new-')
     });
+    console.log('🏥 About to render EyeCareModule for patient:', patient.id);
 
     const [historySummary, setHistorySummary] = useState<string>('');
     const [isSummaryLoading, setIsSummaryLoading] = useState<boolean>(true);
@@ -225,7 +227,14 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
                 />
             )}
 
-            <EyeCareModule patientId={patient.id} />
+            {console.log('🔍 Rendering EyeCareModule NOW for patient:', patient.id) || (
+                <div>
+                    <div className="bg-red-500 text-white p-4 text-center font-bold text-xl">
+                        TEST: Eye Care Should Be Here
+                    </div>
+                    <EyeCareModule patientId={patient.id} />
+                </div>
+            )}
 
             <div className="pt-6 border-t border-border-light dark:border-border-dark">
                  <h4 className="text-lg font-semibold text-text-light dark:text-text-dark mb-4">Visit Details for {selectedRecord.date}</h4>

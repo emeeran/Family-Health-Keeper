@@ -42,6 +42,7 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
   onDeleteMedication,
   doctors,
 }) => {
+  console.log('🏥 PatientDetails (features) rendering for patient:', patient.name, patient.id);
   const [historySummary, setHistorySummary] = useState<string>('');
   const [isSummaryLoading, setIsSummaryLoading] = useState<boolean>(true);
   const [isSummaryRegenerating, setIsSummaryRegenerating] = useState<boolean>(false);
@@ -268,7 +269,18 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
 
         <DrugInteractions medications={patient.currentMedications} />
 
-      <EyeCareModule patientId={patient.id} />
+        <div style={{
+          border: '4px solid green',
+          background: 'yellow',
+          padding: '20px',
+          margin: '20px 0',
+          textAlign: 'center',
+          fontSize: '24px',
+          fontWeight: 'bold'
+        }}>
+          EYE CARE MODULE HERE
+          <EyeCareModule patientId={patient.id} />
+        </div>
 
       <div className="space-y-2 pb-6 border-b border-border-light dark:border-border-dark">
         <div className="flex justify-between items-center">

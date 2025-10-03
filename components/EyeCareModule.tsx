@@ -8,9 +8,11 @@ interface EyeCareModuleProps {
 }
 
 export const EyeCareModule: React.FC<EyeCareModuleProps> = ({ patientId }) => {
+  console.log('🔍 EyeCareModule rendering for patient:', patientId);
   const { theme, patients, initializeEyeRecord, addEyePrescription, addEyeTest, addEyeCondition, setCurrentGlasses, deleteEyePrescription, deleteEyeTest, deleteEyeCondition } = useAppStore();
   const patient = patients.find(p => p.id === patientId);
   const eyeRecord = patient?.eyeRecord;
+  console.log('👁️ Eye record:', eyeRecord, 'Patient:', patient?.name);
 
   const [activeTab, setActiveTab] = useState<'prescriptions' | 'tests' | 'conditions'>('prescriptions');
   const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
@@ -99,8 +101,13 @@ export const EyeCareModule: React.FC<EyeCareModuleProps> = ({ patientId }) => {
 
   const isDark = theme === 'dark';
 
+  console.log('🎨 Rendering with theme:', theme, 'isDark:', isDark);
+
   return (
-    <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+    <div className={`p-6 rounded-lg border-4 border-green-500 fixed top-20 right-4 z-50 w-96 ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`} style={{ minHeight: '200px' }}>
+      <div className="bg-yellow-300 p-4 mb-4 text-black font-bold text-center text-xl">
+        ⚠️ EYE CARE MODULE IS HERE ⚠️
+      </div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold flex items-center gap-2">
           <span className="material-symbols-outlined">visibility</span>

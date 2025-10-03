@@ -14,6 +14,7 @@ import PerformanceSettings from '../../components/PerformanceSettings';
 import { LazyPatientFormModal, LazyRecordFormModal, LazyDoctorEditModal } from '../../utils/lazyComponents';
 import { ErrorBoundary } from '../../components/ui/ErrorBoundary';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { EyeCareModule } from '../../components/EyeCareModule';
 import ConfirmationDialog from '../../components/ui/ConfirmationDialog';
 import AdvancedSearch from '../search/components/AdvancedSearch';
 import { ResponsiveContainer, ResponsiveFlex, ResponsiveSpacing, ResponsiveText } from '../../components/ui/ResponsiveContainer';
@@ -255,6 +256,14 @@ const App: React.FC = () => {
   const selectedPatient = patients.find(p => p.id === selectedPatientId);
   const selectedRecord = selectedPatient?.records.find(r => r.id === selectedRecordId);
 
+  console.log('🔍 App Debug:', {
+    selectedPatientId,
+    selectedRecordId,
+    selectedPatient: selectedPatient?.name || 'none',
+    selectedRecord: selectedRecord?.date || 'none',
+    totalPatients: patients.length
+  });
+
   // Navigation items for responsive navigation
   const navItems = [
     {
@@ -441,7 +450,9 @@ const App: React.FC = () => {
                 ) : showPerformanceSettings ? (
                   <PerformanceSettings onClose={() => setShowPerformanceSettings(false)} />
                 ) : selectedPatient && selectedRecord ? (
-                  <PatientDetails
+                  (() => {
+                    console.log('🚀 About to render PatientDetails for:', selectedPatient.name, selectedPatient.id);
+                    return <PatientDetails
                     patient={selectedPatient}
                     selectedRecord={selectedRecord}
                     onFormChange={(e) => {
@@ -459,7 +470,7 @@ const App: React.FC = () => {
                     onUpdateMedication={updateMedication}
                     onDeleteMedication={deleteMedication}
                     doctors={doctors}
-                  />
+                  />)();
                 ) : (
                   <div className="h-full flex items-center justify-center text-subtle-light dark:text-subtle-dark">
                     <div className="text-center">
