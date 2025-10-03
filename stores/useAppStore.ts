@@ -5,6 +5,7 @@ import { useDoctorStore } from './slices/doctorStore';
 import { useUIStore } from './slices/uiStore';
 import { useFormStore } from './slices/formStore';
 import { useSearchStore } from './slices/searchStore';
+import { createBackupSlice, type BackupState } from './slices/backupStore';
 import type { AppState } from './types';
 
 /**
@@ -15,7 +16,7 @@ import type { AppState } from './types';
  */
 
 // Type for the complete store interface
-interface AppStore extends AppState {
+interface AppStore extends AppState, BackupState {
   // Patient Actions
   setPatients: (patients: AppState['patients']) => void;
   addPatient: (patient: Omit<AppState['patients'][0], 'id'>) => { success: boolean; error?: string; patient?: AppState['patients'][0] };
@@ -91,6 +92,7 @@ export const useAppStore = create<AppStore>()(
       ...useUIStore.getState(),
       ...useFormStore.getState(),
       ...useSearchStore.getState(),
+      ...createBackupSlice(set, get),
 
       // Actions from Patient Store
       setPatients: (patients) => {
