@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useAppStore } from '../stores/useAppStore';
+import { useSecureHealthStore } from '../stores/useSecureHealthStore';
 import type { HbA1cReading, BloodGlucoseReading, DiabetesMedication } from '../types';
 
 interface DiabetesModuleProps {
@@ -7,7 +7,7 @@ interface DiabetesModuleProps {
 }
 
 export const DiabetesModule: React.FC<DiabetesModuleProps> = ({ patientId }) => {
-  const { theme, patients } = useAppStore();
+  const { theme, patients, initializeDiabetesRecord, addHbA1cReading, addBloodGlucoseReading, addDiabetesMedication } = useSecureHealthStore();
   const patient = patients.find(p => p.id === patientId);
   const diabetesRecord = patient?.diabetesRecord;
 
@@ -21,10 +21,9 @@ export const DiabetesModule: React.FC<DiabetesModuleProps> = ({ patientId }) => 
   // Initialize diabetes record if it doesn't exist
   React.useEffect(() => {
     if (patient && !diabetesRecord) {
-      // TODO: Initialize diabetes record
-      console.log('Initializing diabetes record for patient:', patientId);
+      initializeDiabetesRecord(patientId);
     }
-  }, [patient, diabetesRecord, patientId]);
+  }, [patient, diabetesRecord, patientId, initializeDiabetesRecord]);
 
   // HbA1c trend calculation
   const hba1cTrend = useMemo(() => {
@@ -58,7 +57,7 @@ export const DiabetesModule: React.FC<DiabetesModuleProps> = ({ patientId }) => 
     return { color: 'text-red-600', bg: 'bg-red-50', status: 'Diabetes' };
   };
 
-  const handleAddHba1c = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddHba1c = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
@@ -70,13 +69,12 @@ export const DiabetesModule: React.FC<DiabetesModuleProps> = ({ patientId }) => 
       doctorId: formData.get('doctorId') as string || undefined,
     };
 
-    // TODO: Add to store
-    console.log('Adding HbA1c reading:', reading);
+    await addHbA1cReading(patientId, reading);
     setShowHba1cForm(false);
     e.currentTarget.reset();
   };
 
-  const handleAddGlucose = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddGlucose = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
@@ -89,13 +87,12 @@ export const DiabetesModule: React.FC<DiabetesModuleProps> = ({ patientId }) => 
       notes: formData.get('notes') as string || undefined,
     };
 
-    // TODO: Add to store
-    console.log('Adding glucose reading:', reading);
+    await addBloodGlucoseReading(patientId, reading);
     setShowGlucoseForm(false);
     e.currentTarget.reset();
   };
 
-  const handleAddMedication = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddMedication = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
@@ -109,8 +106,7 @@ export const DiabetesModule: React.FC<DiabetesModuleProps> = ({ patientId }) => 
       notes: formData.get('notes') as string || undefined,
     };
 
-    // TODO: Add to store
-    console.log('Adding diabetes medication:', medication);
+    await addDiabetesMedication(patientId, medication);
     setShowMedicationForm(false);
     e.currentTarget.reset();
   };

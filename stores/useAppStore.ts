@@ -7,6 +7,7 @@ import { useFormStore } from './slices/formStore';
 import { useSearchStore } from './slices/searchStore';
 import { createBackupSlice, type BackupState } from './slices/backupStore';
 import { createEyeCareSlice, type EyeCareState } from './slices/eyeCareStore';
+import { createDiabetesSlice, type DiabetesState } from './slices/diabetesStore';
 import type { AppState } from './types';
 
 /**
@@ -17,7 +18,7 @@ import type { AppState } from './types';
  */
 
 // Type for the complete store interface
-interface AppStore extends AppState, BackupState, EyeCareState {
+interface AppStore extends AppState, BackupState, EyeCareState, DiabetesState {
   // Patient Actions
   setPatients: (patients: AppState['patients']) => void;
   addPatient: (patient: Omit<AppState['patients'][0], 'id'>) => { success: boolean; error?: string; patient?: AppState['patients'][0] };

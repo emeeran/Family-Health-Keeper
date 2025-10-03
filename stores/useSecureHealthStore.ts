@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { secureStorage } from '../services/secureStorageService';
-import type { Patient, MedicalRecord, Doctor, Document, Reminder, Medication } from '../types';
+import type { Patient, MedicalRecord, Doctor, Document, Reminder, Medication, HbA1cReading, BloodGlucoseReading, DiabetesMedication } from '../types';
 import { DOCTORS } from '../constants';
 
 interface SecureHealthState {
@@ -64,6 +64,18 @@ interface SecureHealthState {
   updateAppointment: (patientId: string, appointmentId: string, updates: Partial<import('../types').Appointment>) => Promise<void>;
   deleteAppointment: (patientId: string, appointmentId: string) => Promise<void>;
   createReminderFromAppointment: (patientId: string, appointmentId: string) => Promise<void>;
+
+  // Diabetes Actions
+  initializeDiabetesRecord: (patientId: string) => Promise<void>;
+  addHbA1cReading: (patientId: string, reading: Omit<HbA1cReading, 'id'>) => Promise<void>;
+  updateHbA1cReading: (patientId: string, readingId: string, updates: Partial<HbA1cReading>) => Promise<void>;
+  deleteHbA1cReading: (patientId: string, readingId: string) => Promise<void>;
+  addBloodGlucoseReading: (patientId: string, reading: Omit<BloodGlucoseReading, 'id'>) => Promise<void>;
+  updateBloodGlucoseReading: (patientId: string, readingId: string, updates: Partial<BloodGlucoseReading>) => Promise<void>;
+  deleteBloodGlucoseReading: (patientId: string, readingId: string) => Promise<void>;
+  addDiabetesMedication: (patientId: string, medication: Omit<DiabetesMedication, 'id'>) => Promise<void>;
+  updateDiabetesMedication: (patientId: string, medicationId: string, updates: Partial<DiabetesMedication>) => Promise<void>;
+  deleteDiabetesMedication: (patientId: string, medicationId: string) => Promise<void>;
 
   // Utility Actions
   clearAllData: () => Promise<void>;
@@ -619,6 +631,290 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to create reminder from appointment:', error);
+    }
+  },
+
+  // Diabetes Actions
+  initializeDiabetesRecord: async (patientId: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1 && !patients[patientIndex].diabetesRecord) {
+        const updatedPatients = [...patients];
+        const newDiabetesRecord: import('../types').DiabetesRecord = {
+          id: `diabetes-${Date.now()}`,
+          patientId,
+          diagnosisDate: new Date().toISOString().split('T')[0],
+          type: 'type2', // Default, can be updated later
+          hba1cReadings: [],
+          bloodGlucoseReadings: [],
+          medications: [],
+          targetHba1c: 7.0,
+          targetGlucoseRanges: {
+            fasting: { min: 80, max: 130 },
+            postprandial: { min: 100, max: 180 }
+          },
+          lastCheckup: new Date().toISOString().split('T')[0],
+          nextCheckup: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        };
+
+        updatedPatients[patientIndex] = {
+          ...updatedPatients[patientIndex],
+          diabetesRecord: newDiabetesRecord
+        };
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to initialize diabetes record:', error);
+    }
+  },
+
+  addHbA1cReading: async (patientId: string, reading: Omit<HbA1cReading, 'id'>) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const patient = updatedPatients[patientIndex];
+
+        // Initialize diabetes record if it doesn't exist
+        if (!patient.diabetesRecord) {
+          await get().initializeDiabetesRecord(patientId);
+          // Refetch updated patients
+          const currentPatients = get().patients;
+          const updatedPatientIndex = currentPatients.findIndex(p => p.id === patientId);
+          if (updatedPatientIndex === -1) return;
+          updatedPatients[updatedPatientIndex] = currentPatients[updatedPatientIndex];
+        }
+
+        const newReading: HbA1cReading = {
+          ...reading,
+          id: `hba1c-${Date.now()}`
+        };
+
+        const finalPatientIndex = updatedPatients.findIndex(p => p.id === patientId);
+        if (finalPatientIndex !== -1 && updatedPatients[finalPatientIndex].diabetesRecord) {
+          updatedPatients[finalPatientIndex].diabetesRecord = {
+            ...updatedPatients[finalPatientIndex].diabetesRecord,
+            hba1cReadings: [...updatedPatients[finalPatientIndex].diabetesRecord.hba1cReadings, newReading]
+          };
+
+          await secureStorage.savePatients(updatedPatients);
+          set({ patients: updatedPatients });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to add HbA1c reading:', error);
+    }
+  },
+
+  updateHbA1cReading: async (patientId: string, readingId: string, updates: Partial<HbA1cReading>) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1 && patients[patientIndex].diabetesRecord) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].diabetesRecord = {
+          ...updatedPatients[patientIndex].diabetesRecord,
+          hba1cReadings: updatedPatients[patientIndex].diabetesRecord.hba1cReadings.map(r =>
+            r.id === readingId ? { ...r, ...updates } : r
+          )
+        };
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to update HbA1c reading:', error);
+    }
+  },
+
+  deleteHbA1cReading: async (patientId: string, readingId: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1 && patients[patientIndex].diabetesRecord) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].diabetesRecord = {
+          ...updatedPatients[patientIndex].diabetesRecord,
+          hba1cReadings: updatedPatients[patientIndex].diabetesRecord.hba1cReadings.filter(r => r.id !== readingId)
+        };
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to delete HbA1c reading:', error);
+    }
+  },
+
+  addBloodGlucoseReading: async (patientId: string, reading: Omit<BloodGlucoseReading, 'id'>) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const patient = updatedPatients[patientIndex];
+
+        // Initialize diabetes record if it doesn't exist
+        if (!patient.diabetesRecord) {
+          await get().initializeDiabetesRecord(patientId);
+          // Refetch updated patients
+          const currentPatients = get().patients;
+          const updatedPatientIndex = currentPatients.findIndex(p => p.id === patientId);
+          if (updatedPatientIndex === -1) return;
+          updatedPatients[updatedPatientIndex] = currentPatients[updatedPatientIndex];
+        }
+
+        const newReading: BloodGlucoseReading = {
+          ...reading,
+          id: `glucose-${Date.now()}`
+        };
+
+        const finalPatientIndex = updatedPatients.findIndex(p => p.id === patientId);
+        if (finalPatientIndex !== -1 && updatedPatients[finalPatientIndex].diabetesRecord) {
+          updatedPatients[finalPatientIndex].diabetesRecord = {
+            ...updatedPatients[finalPatientIndex].diabetesRecord,
+            bloodGlucoseReadings: [...updatedPatients[finalPatientIndex].diabetesRecord.bloodGlucoseReadings, newReading]
+          };
+
+          await secureStorage.savePatients(updatedPatients);
+          set({ patients: updatedPatients });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to add blood glucose reading:', error);
+    }
+  },
+
+  updateBloodGlucoseReading: async (patientId: string, readingId: string, updates: Partial<BloodGlucoseReading>) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1 && patients[patientIndex].diabetesRecord) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].diabetesRecord = {
+          ...updatedPatients[patientIndex].diabetesRecord,
+          bloodGlucoseReadings: updatedPatients[patientIndex].diabetesRecord.bloodGlucoseReadings.map(r =>
+            r.id === readingId ? { ...r, ...updates } : r
+          )
+        };
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to update blood glucose reading:', error);
+    }
+  },
+
+  deleteBloodGlucoseReading: async (patientId: string, readingId: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1 && patients[patientIndex].diabetesRecord) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].diabetesRecord = {
+          ...updatedPatients[patientIndex].diabetesRecord,
+          bloodGlucoseReadings: updatedPatients[patientIndex].diabetesRecord.bloodGlucoseReadings.filter(r => r.id !== readingId)
+        };
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to delete blood glucose reading:', error);
+    }
+  },
+
+  addDiabetesMedication: async (patientId: string, medication: Omit<DiabetesMedication, 'id'>) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const patient = updatedPatients[patientIndex];
+
+        // Initialize diabetes record if it doesn't exist
+        if (!patient.diabetesRecord) {
+          await get().initializeDiabetesRecord(patientId);
+          // Refetch updated patients
+          const currentPatients = get().patients;
+          const updatedPatientIndex = currentPatients.findIndex(p => p.id === patientId);
+          if (updatedPatientIndex === -1) return;
+          updatedPatients[updatedPatientIndex] = currentPatients[updatedPatientIndex];
+        }
+
+        const newMedication: DiabetesMedication = {
+          ...medication,
+          id: `diabetes-med-${Date.now()}`
+        };
+
+        const finalPatientIndex = updatedPatients.findIndex(p => p.id === patientId);
+        if (finalPatientIndex !== -1 && updatedPatients[finalPatientIndex].diabetesRecord) {
+          updatedPatients[finalPatientIndex].diabetesRecord = {
+            ...updatedPatients[finalPatientIndex].diabetesRecord,
+            medications: [...updatedPatients[finalPatientIndex].diabetesRecord.medications, newMedication]
+          };
+
+          await secureStorage.savePatients(updatedPatients);
+          set({ patients: updatedPatients });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to add diabetes medication:', error);
+    }
+  },
+
+  updateDiabetesMedication: async (patientId: string, medicationId: string, updates: Partial<DiabetesMedication>) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1 && patients[patientIndex].diabetesRecord) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].diabetesRecord = {
+          ...updatedPatients[patientIndex].diabetesRecord,
+          medications: updatedPatients[patientIndex].diabetesRecord.medications.map(m =>
+            m.id === medicationId ? { ...m, ...updates } : m
+          )
+        };
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to update diabetes medication:', error);
+    }
+  },
+
+  deleteDiabetesMedication: async (patientId: string, medicationId: string) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1 && patients[patientIndex].diabetesRecord) {
+        const updatedPatients = [...patients];
+        updatedPatients[patientIndex].diabetesRecord = {
+          ...updatedPatients[patientIndex].diabetesRecord,
+          medications: updatedPatients[patientIndex].diabetesRecord.medications.filter(m => m.id !== medicationId)
+        };
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to delete diabetes medication:', error);
     }
   },
 
