@@ -3,6 +3,8 @@
 <div align="center">
   <h3>🏥 HIPAA-Compliant Family Medical Records Management</h3>
   <p>A comprehensive platform for managing family health records with AI-powered insights</p>
+  
+  [![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-SITE-ID/deploy-status)](https://app.netlify.com/sites/YOUR-SITE-NAME/deploys)
 </div>
 
 ## 📋 Overview
@@ -18,7 +20,18 @@ Family Health Keeper is a modern web application for managing family medical rec
 - 🤖 **AI-Powered Insights** - Health analysis using Google Gemini AI
 - 🔐 **HIPAA Compliant** - Secure handling of medical data
 - 📱 **Responsive Design** - Works on desktop, tablet, and mobile devices
+- 🌐 **PWA Support** - Install as a Progressive Web App, works offline
 - 📊 **Health Reports** - Generate comprehensive health reports
+
+## 🚀 Deployment
+
+### Netlify Deployment (Recommended)
+
+This project is ready for one-click deployment to Netlify:
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/emeeran/Family-Health-Keeper)
+
+For detailed deployment instructions, see [NETLIFY_DEPLOYMENT.md](./NETLIFY_DEPLOYMENT.md)
 
 ## 🏗️ Architecture
 

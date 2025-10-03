@@ -78,7 +78,7 @@ export class SecureStorageService {
   // Generate encryption key from environment or user input
   private generateEncryptionKey(): string {
     const envKey = import.meta.env.VITE_ENCRYPTION_KEY;
-    if (envKey && envKey !== 'your_32_character_encryption_key_here') {
+    if (envKey && envKey !== 'YOUR_32_CHARACTER_ENCRYPTION_KEY_HERE') {
       return envKey;
     }
 

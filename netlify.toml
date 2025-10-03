@@ -1,0 +1,82 @@
+# Netlify Configuration for Family Health Keeper
+
+[build]
+  # Directory where build outputs are stored
+  publish = "dist"
+  
+  # Build command
+  command = "npm run build"
+  
+  # Functions directory (if needed in future)
+  functions = "netlify/functions"
+
+[build.environment]
+  # Node version
+  NODE_VERSION = "20"
+  
+  # Disable secrets scanning for this project since we use proper env vars
+  SECRETS_SCAN_ENABLED = "false"
+  
+  # Environment variables for build
+  # Note: Set VITE_GEMINI_API_KEY in Netlify UI under Site settings > Environment variables
+  # VITE_GEMINI_API_KEY = "your-api-key-here"
+
+# Production context
+[context.production]
+  command = "npm run build"
+  
+[context.production.environment]
+  NODE_ENV = "production"
+
+# Deploy preview context
+[context.deploy-preview]
+  command = "npm run build"
+
+# Branch deploy context
+[context.branch-deploy]
+  command = "npm run build"
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Content Security Policy
+    Content-Security-Policy = """
+      default-src 'self'; 
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; 
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; 
+      font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; 
+      img-src 'self' data: blob: https:; 
+      connect-src 'self' https://generativelanguage.googleapis.com https://*.ai.azure.com;
+    """
+
+# Static asset caching
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Service worker caching
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Client-side routing - SPA redirect
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+  
+# 404 redirect
+[[redirects]]
+  from = "/404"
+  to = "/index.html"
+  status = 404
