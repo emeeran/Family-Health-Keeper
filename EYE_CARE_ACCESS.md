@@ -17,8 +17,18 @@ Open http://localhost:3000
 ### 3. Select a Patient
 Click any patient in the sidebar (or create a new one)
 
-### 4. Scroll to Eye Care Section
-Location: **After "Current Medications"** section
+### 4. Scroll DOWN to Find Eye Care Section
+**Location:** BELOW the Appointments section
+
+**Order on page:**
+1. Patient Info
+2. Health Insights
+3. Current Medications
+4. Medical History Summary
+5. Reminders
+6. Appointments
+7. **👁️ EYE CARE RECORDS** ← HERE!
+8. Visit Details
 
 You'll see:
 ```
