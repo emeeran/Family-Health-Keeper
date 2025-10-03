@@ -1,10 +1,13 @@
 # Netlify Configuration for Family Health Keeper
 
 [build]
+  # Base directory for the build
+  base = "/"
+  
   # Directory where build outputs are stored
   publish = "dist"
   
-  # Build command
+  # Build command - Netlify auto-runs npm ci (or npm install) before this
   command = "npm run build"
   
   # Functions directory (if needed in future)
@@ -13,6 +16,9 @@
 [build.environment]
   # Node version
   NODE_VERSION = "20"
+  
+  # NPM version (use latest compatible with Node 20)
+  NPM_VERSION = "10"
   
   # Disable secrets scanning for this project since we use proper env vars
   SECRETS_SCAN_ENABLED = "false"

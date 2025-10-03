@@ -121,8 +121,8 @@ Set these in Netlify UI (Site settings → Environment variables):
 
 1. Push changes to Git:
    ```bash
-   git add netlify.toml .env.example services/ frontend_new/ NETLIFY_DEPLOYMENT.md
-   git commit -m "fix: Disable Netlify secrets scanning - use proper env vars"
+   git add netlify.toml .env.example services/ frontend_new/ NETLIFY_DEPLOYMENT.md package-lock.json
+   git commit -m "fix: Configure Netlify build with proper Node/NPM versions"
    git push origin main
    ```
 
@@ -139,6 +139,41 @@ Set these in Netlify UI (Site settings → Environment variables):
    - Check build logs for success
    - Test AI features on deployed site
    - Verify no secrets exposed in browser DevTools
+
+## Troubleshooting
+
+### Exit Code 127 Error
+If you see "Command failed with exit code 127", this usually means:
+
+**Cause:** npm or vite command not found during build
+
+**Solutions:**
+1. ✅ **Ensure package-lock.json is committed**
+   ```bash
+   git add package-lock.json
+   git commit -m "chore: Add package-lock.json"
+   git push
+   ```
+
+2. ✅ **Verify Node version compatibility**
+   - Check `.nvmrc` file contains: `20`
+   - Check `netlify.toml` has: `NODE_VERSION = "20"`
+   - Both should match
+
+3. ✅ **Clear Netlify build cache**
+   - Go to: Site settings → Build & deploy → Environment
+   - Click: "Clear cache and retry deploy"
+
+4. ✅ **Check base directory**
+   - Ensure `netlify.toml` has `base = "/"`
+   - This tells Netlify where package.json is located
+
+5. ✅ **Verify NPM version**
+   - Set in netlify.toml: `NPM_VERSION = "10"`
+   - Compatible with Node 20
+
+### Build Log Analysis
+Check Netlify build logs for:
 
 ---
 
