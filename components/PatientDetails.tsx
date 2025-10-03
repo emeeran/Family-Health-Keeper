@@ -7,6 +7,7 @@ import HealthInsights from './HealthInsights';
 import ReminderList from './ReminderList';
 import CurrentMedications from './CurrentMedications';
 import AppointmentManager from '../src/components/AppointmentManager';
+import { EyeCareModule } from './EyeCareModule';
 import { summarizeMedicalHistory } from '../services/geminiService';
 
 interface PatientDetailsProps {
@@ -182,6 +183,8 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
                 onDeleteMedication={onDeleteMedication}
                 onRequestReminder={handleRequestReminderForMed}
             />
+
+            <EyeCareModule patientId={patient.id} />
 
             <div className="space-y-2 pb-6 border-b border-border-light dark:border-border-dark">
                 <div className="flex justify-between items-center">

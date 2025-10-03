@@ -73,6 +73,87 @@ export interface Medication {
   notes?: string;
 }
 
+export interface EyePrescription {
+  id: string;
+  date: string;
+  doctorId?: string;
+  rightEye: {
+    sphere: string; // e.g., "-2.50", "+1.25"
+    cylinder?: string; // e.g., "-0.75"
+    axis?: string; // e.g., "180"
+    add?: string; // For progressive/bifocal lenses
+    prism?: string;
+    base?: string;
+    visualAcuity?: string; // e.g., "20/20", "6/6"
+  };
+  leftEye: {
+    sphere: string;
+    cylinder?: string;
+    axis?: string;
+    add?: string;
+    prism?: string;
+    base?: string;
+    visualAcuity?: string;
+  };
+  pupillaryDistance?: string; // e.g., "63mm"
+  lensType?: 'single-vision' | 'bifocal' | 'progressive' | 'reading' | 'distance' | 'contact';
+  prescribedFor?: 'glasses' | 'contact-lenses' | 'both';
+  notes?: string;
+  nextCheckup?: string;
+}
+
+export interface EyeTest {
+  id: string;
+  date: string;
+  doctorId?: string;
+  type: 'routine' | 'glaucoma' | 'retina' | 'cataract' | 'lasik-screening' | 'other';
+  iop?: { // Intraocular Pressure
+    rightEye?: string;
+    leftEye?: string;
+  };
+  visualField?: string; // Visual field test results
+  retinalExam?: string;
+  findings: string;
+  diagnosis?: string;
+  recommendations?: string;
+  documents?: Document[];
+  nextTestDate?: string;
+}
+
+export interface EyeCondition {
+  id: string;
+  name: string; // e.g., "Myopia", "Glaucoma", "Cataract"
+  diagnosedDate: string;
+  severity?: 'mild' | 'moderate' | 'severe';
+  affectedEye: 'left' | 'right' | 'both';
+  treatment?: string;
+  status: 'active' | 'resolved' | 'monitoring';
+  notes?: string;
+}
+
+export interface EyeRecord {
+  id: string;
+  patientId: string;
+  prescriptions: EyePrescription[];
+  tests: EyeTest[];
+  conditions: EyeCondition[];
+  surgeries?: {
+    id: string;
+    type: string; // e.g., "LASIK", "Cataract", "Glaucoma"
+    eye: 'left' | 'right' | 'both';
+    date: string;
+    surgeon?: string;
+    outcome?: string;
+    notes?: string;
+  }[];
+  medications?: string[]; // Eye drops, ointments
+  currentGlasses?: string; // Reference to current prescription ID
+  currentContacts?: string; // Reference to current contact lens prescription ID
+  lastCheckup?: string;
+  nextCheckup?: string;
+  notes?: string;
+}
+
 export interface HospitalId {
   id: string;
   hospitalName: string;
@@ -173,6 +254,7 @@ export interface Patient {
   reminders: Reminder[];
   appointments: Appointment[];
   currentMedications: Medication[];
+  eyeRecord?: EyeRecord; // Eye care record
   primaryDoctorId?: string;
   userId?: string; // Link to the user who owns this patient
 }

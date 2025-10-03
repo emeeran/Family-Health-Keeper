@@ -6,6 +6,7 @@ import { useUIStore } from './slices/uiStore';
 import { useFormStore } from './slices/formStore';
 import { useSearchStore } from './slices/searchStore';
 import { createBackupSlice, type BackupState } from './slices/backupStore';
+import { createEyeCareSlice, type EyeCareState } from './slices/eyeCareStore';
 import type { AppState } from './types';
 
 /**
@@ -16,7 +17,7 @@ import type { AppState } from './types';
  */
 
 // Type for the complete store interface
-interface AppStore extends AppState, BackupState {
+interface AppStore extends AppState, BackupState, EyeCareState {
   // Patient Actions
   setPatients: (patients: AppState['patients']) => void;
   addPatient: (patient: Omit<AppState['patients'][0], 'id'>) => { success: boolean; error?: string; patient?: AppState['patients'][0] };
@@ -93,6 +94,7 @@ export const useAppStore = create<AppStore>()(
       ...useFormStore.getState(),
       ...useSearchStore.getState(),
       ...createBackupSlice(set, get),
+      ...createEyeCareSlice(set, get),
 
       // Actions from Patient Store
       setPatients: (patients) => {
