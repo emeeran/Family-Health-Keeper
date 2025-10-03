@@ -22,6 +22,7 @@ Family Health Keeper is a modern web application for managing family medical rec
 - 📱 **Responsive Design** - Works on desktop, tablet, and mobile devices
 - 🌐 **PWA Support** - Install as a Progressive Web App, works offline
 - 📊 **Health Reports** - Generate comprehensive health reports
+- 💾 **Backup & Restore** - One-click encrypted backups (see [BACKUP_GUIDE.md](./BACKUP_GUIDE.md))
 
 ## 🚀 Deployment
 
