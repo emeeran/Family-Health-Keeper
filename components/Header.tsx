@@ -11,6 +11,8 @@ interface HeaderProps {
     onLogin?: () => void;
     onLogout?: () => void;
     selectedDoctor?: Doctor | null;
+    onBackup?: () => void;
+    onRestore?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -23,6 +25,8 @@ const Header: React.FC<HeaderProps> = ({
     onLogin,
     onLogout,
     selectedDoctor,
+    onBackup,
+    onRestore,
 }) => {
     const patientName = selectedPatient?.name || 'No Person Selected';
     const patientInitial = selectedPatient?.name?.charAt(0).toUpperCase() || '?';
@@ -93,16 +97,40 @@ const Header: React.FC<HeaderProps> = ({
                                 {userName}
                             </span>
                         </div>
-                        <div className="relative">
+                        
+                        {/* Backup Button */}
+                        {onBackup && (
                             <button
-                                onClick={onLogout}
-                                className="btn-ghost p-3 rounded-xl hover-lift text-red-600 dark:text-red-400"
-                                title="Logout"
-                                aria-label="Logout from your account"
+                                onClick={onBackup}
+                                className="btn-ghost p-3 rounded-xl hover-lift text-blue-600 dark:text-blue-400"
+                                title="Create Backup"
+                                aria-label="Create and download data backup"
                             >
-                                <span className="material-symbols-outlined text-lg">logout</span>
+                                <span className="material-symbols-outlined text-lg">backup</span>
                             </button>
-                        </div>
+                        )}
+                        
+                        {/* Restore Button */}
+                        {onRestore && (
+                            <button
+                                onClick={onRestore}
+                                className="btn-ghost p-3 rounded-xl hover-lift text-green-600 dark:text-green-400"
+                                title="Restore Backup"
+                                aria-label="Restore data from backup"
+                            >
+                                <span className="material-symbols-outlined text-lg">restore</span>
+                            </button>
+                        )}
+                        
+                        {/* Logout Button */}
+                        <button
+                            onClick={onLogout}
+                            className="btn-ghost p-3 rounded-xl hover-lift text-red-600 dark:text-red-400"
+                            title="Logout"
+                            aria-label="Logout from your account"
+                        >
+                            <span className="material-symbols-outlined text-lg">logout</span>
+                        </button>
                     </div>
                 ) : onLogin && (
                     <button

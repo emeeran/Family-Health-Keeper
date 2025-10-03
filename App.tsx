@@ -10,6 +10,7 @@ import PatientFormModal from './components/PatientFormModal';
 import RecordFormModal from './components/RecordFormModal';
 import DoctorEditModal from './components/DoctorEditModal';
 import SimpleLogin from './components/SimpleLogin';
+import BackupService, { type EncryptedBackup } from './services/backupService';
 import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor } from './types';
 import { generatePatientPdf } from './services/pdfService';
 import { simpleAuthService, type SimpleAuthState } from './services/simpleAuthService';
@@ -555,10 +556,123 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    if (window.confirm('Are you sure you want to logout?')) {
+    if (window.confirm('Are you sure you want to logout? All data will be cleared.')) {
+      // Clear all records from patients before logout
+      const clearedPatients = patients.map(patient => ({
+        ...patient,
+        records: [],
+        currentMedications: [],
+        reminders: [],
+        appointments: []
+      }));
+      
+      // Update patients with cleared data
+      clearedPatients.forEach(patient => {
+        updatePatient(patient.id, patient);
+      });
+      
+      // Perform logout
       await simpleAuthService.logout();
       setIsLoginModalOpen(true);
     }
+  };
+
+  // Backup Service instance
+  const backupServiceRef = useRef<BackupService | null>(null);
+  
+  useEffect(() => {
+    const encryptionKey = import.meta.env.VITE_ENCRYPTION_KEY || 'default-family-health-keeper-key';
+    backupServiceRef.current = new BackupService(encryptionKey);
+  }, []);
+
+  const handleBackup = async () => {
+    if (!backupServiceRef.current) {
+      alert('Backup service not initialized');
+      return;
+    }
+
+    try {
+      announce('Creating backup...');
+      const backup = await backupServiceRef.current.createBackup(patients, doctors, false);
+      await backupServiceRef.current.exportBackupToFile(backup);
+      announce('Backup created and downloaded successfully');
+      alert('Backup created and downloaded successfully!');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      announce(`Backup failed: ${errorMessage}`);
+      alert(`Backup failed: ${errorMessage}`);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!backupServiceRef.current) {
+      alert('Backup service not initialized');
+      return;
+    }
+
+    // Create file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = async (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+      
+      if (!file) return;
+
+      try {
+        announce('Importing backup...');
+        const backup = await backupServiceRef.current!.importBackupFromFile(file);
+        
+        // Validate backup
+        const isValid = await backupServiceRef.current!.validateBackup(backup);
+        if (!isValid) {
+          alert('Backup validation failed. The file may be corrupted.');
+          return;
+        }
+
+        const confirmRestore = window.confirm(
+          `Restore backup with ${backup.metadata.itemCount.patients} patients and ${backup.metadata.itemCount.doctors} doctors?\n\nThis will replace all current data.`
+        );
+
+        if (!confirmRestore) return;
+
+        announce('Restoring backup...');
+        const restoredData = await backupServiceRef.current!.restoreBackup(backup);
+        
+        // Update app state with restored data
+        restoredData.data.patients.forEach(patient => {
+          const existing = patients.find(p => p.id === patient.id);
+          if (existing) {
+            updatePatient(patient.id, patient);
+          } else {
+            addPatient(patient);
+          }
+        });
+
+        restoredData.data.doctors.forEach(doctor => {
+          const existing = doctors.find(d => d.id === doctor.id);
+          if (existing) {
+            updateDoctor(doctor.id, doctor);
+          } else {
+            addDoctor(doctor);
+          }
+        });
+
+        announce('Data restored successfully');
+        alert(`Data restored successfully!\n${restoredData.data.patients.length} patients and ${restoredData.data.doctors.length} doctors restored.`);
+        
+        // Refresh the page to reload all data
+        window.location.reload();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        announce(`Restore failed: ${errorMessage}`);
+        alert(`Restore failed: ${errorMessage}`);
+      }
+    };
+
+    input.click();
   };
 
   // --- Doctor Handlers ---
@@ -700,6 +814,8 @@ const App: React.FC = () => {
               } : null}
               onLogin={handleOpenLogin}
               onLogout={handleLogout}
+              onBackup={handleBackup}
+              onRestore={handleRestore}
               selectedDoctor={selectedDoctor}
             />
             {/* Expand sidebar button when collapsed */}
