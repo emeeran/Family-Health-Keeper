@@ -378,6 +378,29 @@ export class SecureStorageService {
     }
   }
 
+  // Update a patient
+  async updatePatient(id: string, updates: Partial<Patient>): Promise<void> {
+    if (!this.isOperationAllowed()) {
+      throw new Error('Operation not allowed');
+    }
+
+    try {
+      const patients = await this.loadPatients();
+      const index = patients.findIndex(p => p.id === id);
+      
+      if (index === -1) {
+        throw new Error('Patient not found');
+      }
+
+      patients[index] = { ...patients[index], ...updates };
+      await this.savePatients(patients);
+      this.logAuditEvent('UPDATE_PATIENT', `Updated patient: ${patients[index].name}`, 'low');
+    } catch (error) {
+      this.logAuditEvent('UPDATE_ERROR', `Failed to update patient: ${error}`, 'high');
+      throw error;
+    }
+  }
+
   // Add a single doctor
   async addDoctor(doctor: Doctor): Promise<void> {
     if (!this.isOperationAllowed()) {
