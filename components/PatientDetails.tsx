@@ -184,8 +184,6 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
                 onRequestReminder={handleRequestReminderForMed}
             />
 
-            <EyeCareModule patientId={patient.id} />
-
             <div className="space-y-2 pb-6 border-b border-border-light dark:border-border-dark">
                 <div className="flex justify-between items-center">
                     <h4 className="text-lg font-semibold text-text-light dark:text-text-dark">Medical History Summary</h4>
@@ -226,6 +224,8 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
                     onCreateReminder={(appointmentId) => onCreateReminderFromAppointment(patient.id, appointmentId)}
                 />
             )}
+
+            <EyeCareModule patientId={patient.id} />
 
             <div className="pt-6 border-t border-border-light dark:border-border-dark">
                  <h4 className="text-lg font-semibold text-text-light dark:text-text-dark mb-4">Visit Details for {selectedRecord.date}</h4>
