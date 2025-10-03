@@ -17,7 +17,6 @@ interface SidebarProps {
     onDeletePatient: () => void;
     onExportPatient: (id: string) => void;
     onExportPatientPdf: (id: string) => void;
-    onEditRecord: () => void;
     onSaveRecord: () => void;
     onDeleteRecord: () => void;
     isEditing: boolean;

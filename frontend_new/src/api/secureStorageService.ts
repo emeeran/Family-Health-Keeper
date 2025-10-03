@@ -417,6 +417,51 @@ export class SecureStorageService {
     }
   }
 
+  // Delete a patient
+  async deletePatient(id: string): Promise<void> {
+    if (!this.isOperationAllowed()) {
+      throw new Error('Operation not allowed');
+    }
+
+    try {
+      const patients = await this.loadPatients();
+      const patientIndex = patients.findIndex(p => p.id === id);
+      
+      if (patientIndex === -1) {
+        throw new Error('Patient not found');
+      }
+
+      const patientName = patients[patientIndex].name;
+      patients.splice(patientIndex, 1);
+      await this.savePatients(patients);
+      this.logAuditEvent('DELETE_PATIENT', `Deleted patient: ${patientName}`, 'medium');
+    } catch (error) {
+      this.logAuditEvent('DELETE_ERROR', `Failed to delete patient: ${error}`, 'high');
+      throw error;
+    }
+  }
+
+  // Clear all data (for logout or reset)
+  async clearAllData(): Promise<void> {
+    if (!this.isOperationAllowed()) {
+      throw new Error('Operation not allowed');
+    }
+
+    try {
+      // Remove encrypted data from localStorage
+      localStorage.removeItem('fhk_patients_encrypted');
+      localStorage.removeItem('fhk_doctors_encrypted');
+      
+      // Clear in-memory cache
+      this.encryptedData.clear();
+      
+      this.logAuditEvent('CLEAR_DATA', 'All encrypted data cleared', 'critical');
+    } catch (error) {
+      this.logAuditEvent('CLEAR_ERROR', `Failed to clear data: ${error}`, 'high');
+      throw error;
+    }
+  }
+
   // Filter old data based on retention policy
   private filterOldData(patients: Patient[]): Patient[] {
     const cutoffDate = new Date();

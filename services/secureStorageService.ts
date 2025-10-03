@@ -110,30 +110,78 @@ export class SecureStorageService {
     return btoa(fingerprint).replace(/[^a-zA-Z0-9]/g, '');
   }
 
-  // Simple XOR encryption for demonstration (NOT for production)
-  // In production, use Web Crypto API with AES-GCM
-  private encryptData(data: any): string {
-    const jsonString = JSON.stringify(data);
-    const keyBytes = this.encryptionKey.split('').map(char => char.charCodeAt(0));
-    const dataBytes = jsonString.split('').map(char => char.charCodeAt(0));
-
-    const encrypted = dataBytes.map((byte, index) =>
-      byte ^ keyBytes[index % keyBytes.length]
+  // Derive CryptoKey from encryption key string
+  private async deriveKey(): Promise<CryptoKey> {
+    const encoder = new TextEncoder();
+    const keyMaterial = encoder.encode(this.encryptionKey.padEnd(32, '0').substring(0, 32));
+    
+    return await crypto.subtle.importKey(
+      'raw',
+      keyMaterial,
+      { name: 'AES-GCM' },
+      false,
+      ['encrypt', 'decrypt']
     );
-
-    return btoa(String.fromCharCode(...encrypted));
   }
 
-  private decryptData(encryptedData: string): any {
+  // AES-GCM encryption (production-ready)
+  private async encryptData(data: any): Promise<string> {
     try {
-      const encrypted = atob(encryptedData).split('').map(char => char.charCodeAt(0));
-      const keyBytes = this.encryptionKey.split('').map(char => char.charCodeAt(0));
-
-      const decrypted = encrypted.map((byte, index) =>
-        byte ^ keyBytes[index % keyBytes.length]
+      const encoder = new TextEncoder();
+      const jsonString = JSON.stringify(data);
+      const dataBytes = encoder.encode(jsonString);
+      
+      // Generate random initialization vector
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      
+      // Get encryption key
+      const key = await this.deriveKey();
+      
+      // Encrypt data
+      const encryptedBuffer = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        dataBytes
       );
+      
+      // Combine IV and encrypted data
+      const combined = new Uint8Array(iv.length + encryptedBuffer.byteLength);
+      combined.set(iv, 0);
+      combined.set(new Uint8Array(encryptedBuffer), iv.length);
+      
+      // Convert to base64
+      return btoa(String.fromCharCode(...combined));
+    } catch (error) {
+      this.logAuditEvent('ENCRYPTION_ERROR', `Failed to encrypt data: ${error}`, 'critical');
+      throw new Error('Encryption failed');
+    }
+  }
 
-      return JSON.parse(String.fromCharCode(...decrypted));
+  private async decryptData(encryptedData: string): Promise<any> {
+    try {
+      // Decode from base64
+      const combined = new Uint8Array(
+        atob(encryptedData).split('').map(char => char.charCodeAt(0))
+      );
+      
+      // Extract IV and encrypted data
+      const iv = combined.slice(0, 12);
+      const encrypted = combined.slice(12);
+      
+      // Get decryption key
+      const key = await this.deriveKey();
+      
+      // Decrypt data
+      const decryptedBuffer = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        encrypted
+      );
+      
+      // Convert to string and parse JSON
+      const decoder = new TextDecoder();
+      const jsonString = decoder.decode(decryptedBuffer);
+      return JSON.parse(jsonString);
     } catch (error) {
       this.logAuditEvent('DECRYPTION_ERROR', `Failed to decrypt data: ${error}`, 'high');
       return null;
@@ -270,7 +318,7 @@ export class SecureStorageService {
     }
 
     try {
-      const encrypted = this.encryptData(patients);
+      const encrypted = await this.encryptData(patients);
       this.encryptedData.set('patients', encrypted);
       // Persist to localStorage for data persistence
       localStorage.setItem('fhk_patients_encrypted', encrypted);
@@ -285,24 +333,24 @@ export class SecureStorageService {
   // Load and decrypt patients
   async loadPatients(): Promise<Patient[]> {
     if (!this.isOperationAllowed()) {
-      throw new Error('Operation not allowed');
+      return [];
     }
 
     try {
-      // Try to load from localStorage first, then fallback to memory
-      let encrypted = localStorage.getItem('fhk_patients_encrypted');
+      // Try loading from localStorage first
+      const storedData = localStorage.getItem('fhk_patients_encrypted');
+      const encrypted = storedData || this.encryptedData.get('patients');
+
       if (!encrypted) {
-        encrypted = this.encryptedData.get('patients');
-      }
-      if (!encrypted) {
+        this.logAuditEvent('LOAD_PATIENTS', 'No patient data found', 'low');
         return [];
       }
 
-      const patients = this.decryptData(encrypted) || [];
+      const patients = await this.decryptData(encrypted) || [];
       // Cache in memory for faster access
       this.encryptedData.set('patients', encrypted);
 
-      // Filter out old data based on retention policy
+      // Apply data retention policy
       const filteredPatients = this.filterOldData(patients);
 
       this.logAuditEvent('LOAD_PATIENTS', `Loaded ${filteredPatients.length} patients`, 'low');
@@ -320,7 +368,7 @@ export class SecureStorageService {
     }
 
     try {
-      const encrypted = this.encryptData(doctors);
+      const encrypted = await this.encryptData(doctors);
       this.encryptedData.set('doctors', encrypted);
       // Persist to localStorage for data persistence
       localStorage.setItem('fhk_doctors_encrypted', encrypted);
@@ -349,7 +397,7 @@ export class SecureStorageService {
         return [];
       }
 
-      const doctors = this.decryptData(encrypted) || [];
+      const doctors = await this.decryptData(encrypted) || [];
       // Cache in memory for faster access
       this.encryptedData.set('doctors', encrypted);
 
@@ -461,6 +509,51 @@ export class SecureStorageService {
       this.logAuditEvent('DELETE_DOCTOR', `Deleted doctor: ${doctorName}`, 'medium');
     } catch (error) {
       this.logAuditEvent('DELETE_ERROR', `Failed to delete doctor: ${error}`, 'high');
+      throw error;
+    }
+  }
+
+  // Delete a patient
+  async deletePatient(id: string): Promise<void> {
+    if (!this.isOperationAllowed()) {
+      throw new Error('Operation not allowed');
+    }
+
+    try {
+      const patients = await this.loadPatients();
+      const patientIndex = patients.findIndex(p => p.id === id);
+      
+      if (patientIndex === -1) {
+        throw new Error('Patient not found');
+      }
+
+      const patientName = patients[patientIndex].name;
+      patients.splice(patientIndex, 1);
+      await this.savePatients(patients);
+      this.logAuditEvent('DELETE_PATIENT', `Deleted patient: ${patientName}`, 'medium');
+    } catch (error) {
+      this.logAuditEvent('DELETE_ERROR', `Failed to delete patient: ${error}`, 'high');
+      throw error;
+    }
+  }
+
+  // Clear all data (for logout or reset)
+  async clearAllData(): Promise<void> {
+    if (!this.isOperationAllowed()) {
+      throw new Error('Operation not allowed');
+    }
+
+    try {
+      // Remove encrypted data from localStorage
+      localStorage.removeItem('fhk_patients_encrypted');
+      localStorage.removeItem('fhk_doctors_encrypted');
+      
+      // Clear in-memory cache
+      this.encryptedData.clear();
+      
+      this.logAuditEvent('CLEAR_DATA', 'All encrypted data cleared', 'critical');
+    } catch (error) {
+      this.logAuditEvent('CLEAR_ERROR', `Failed to clear data: ${error}`, 'high');
       throw error;
     }
   }
