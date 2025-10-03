@@ -419,8 +419,24 @@ const App: React.FC = () => {
   };
 
   const handleExportPatientPdf = async (patientId: string) => {
-    // TODO: Implement PDF export functionality with secure storage
-    console.log('Export patient PDF:', patientId);
+    try {
+      const patient = patients.find(p => p.id === patientId);
+      if (!patient) {
+        alert('Patient not found');
+        return;
+      }
+
+      // Show loading indicator
+      announce('Generating PDF export...');
+      
+      // Generate and download the PDF
+      await generatePatientPdf(patient, doctors);
+      
+      announce('PDF exported successfully');
+    } catch (error) {
+      console.error('Error exporting patient PDF:', error);
+      alert('Failed to export PDF. Please try again.');
+    }
   };
 
   const handleFileUpload = (files: FileList | null) => {

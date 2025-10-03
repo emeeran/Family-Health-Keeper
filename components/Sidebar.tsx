@@ -462,6 +462,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                                     <p className="truncate text-subtle-light dark:text-subtle-dark text-xs">
                                                                         {record.complaint || 'No complaint listed'}
                                                                     </p>
+                                                                    {record.doctorId && (
+                                                                        <p className="truncate text-subtle-light dark:text-subtle-dark text-xs mt-0.5">
+                                                                            <span className="material-symbols-outlined text-xs align-middle mr-0.5">person</span>
+                                                                            {doctors.find(d => d.id === record.doctorId)?.name || 'Unknown Doctor'}
+                                                                        </p>
+                                                                    )}
                                                                 </div>
                                                                 {record.isNew && <span className="w-2 h-2 mr-1 bg-secondary rounded-full" title="New Record"></span>}
                                                             </a>

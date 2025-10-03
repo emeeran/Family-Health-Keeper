@@ -115,11 +115,11 @@ export const ShareWithDoctor: React.FC<ShareWithDoctorProps> = ({
       {/* Share Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 shadow-sm"
+        className="p-1 text-subtle-light dark:text-subtle-dark hover:text-primary-DEFAULT"
         title="Share with Doctor"
+        aria-label="Share patient data with doctor via WhatsApp"
       >
-        <span className="material-symbols-outlined text-sm">share</span>
-        <span className="hidden sm:inline">Share</span>
+        <span className="material-symbols-outlined text-base">share</span>
       </button>
 
       {/* Right Side Panel */}

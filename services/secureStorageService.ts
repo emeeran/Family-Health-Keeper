@@ -345,6 +345,7 @@ export class SecureStorageService {
         encrypted = this.encryptedData.get('doctors');
       }
       if (!encrypted) {
+        // Return empty array - initialization will be handled by the store
         return [];
       }
 
@@ -390,6 +391,53 @@ export class SecureStorageService {
       this.logAuditEvent('ADD_DOCTOR', `Added doctor: ${doctor.name}`, 'low');
     } catch (error) {
       this.logAuditEvent('ADD_ERROR', `Failed to add doctor: ${error}`, 'high');
+      throw error;
+    }
+  }
+
+  // Update a doctor
+  async updateDoctor(id: string, updates: Partial<Doctor>): Promise<void> {
+    if (!this.isOperationAllowed()) {
+      throw new Error('Operation not allowed');
+    }
+
+    try {
+      const doctors = await this.loadDoctors();
+      const index = doctors.findIndex(d => d.id === id);
+      
+      if (index === -1) {
+        throw new Error('Doctor not found');
+      }
+
+      doctors[index] = { ...doctors[index], ...updates };
+      await this.saveDoctors(doctors);
+      this.logAuditEvent('UPDATE_DOCTOR', `Updated doctor: ${doctors[index].name}`, 'low');
+    } catch (error) {
+      this.logAuditEvent('UPDATE_ERROR', `Failed to update doctor: ${error}`, 'high');
+      throw error;
+    }
+  }
+
+  // Delete a doctor
+  async deleteDoctor(id: string): Promise<void> {
+    if (!this.isOperationAllowed()) {
+      throw new Error('Operation not allowed');
+    }
+
+    try {
+      const doctors = await this.loadDoctors();
+      const doctorIndex = doctors.findIndex(d => d.id === id);
+      
+      if (doctorIndex === -1) {
+        throw new Error('Doctor not found');
+      }
+
+      const doctorName = doctors[doctorIndex].name;
+      doctors.splice(doctorIndex, 1);
+      await this.saveDoctors(doctors);
+      this.logAuditEvent('DELETE_DOCTOR', `Deleted doctor: ${doctorName}`, 'medium');
+    } catch (error) {
+      this.logAuditEvent('DELETE_ERROR', `Failed to delete doctor: ${error}`, 'high');
       throw error;
     }
   }

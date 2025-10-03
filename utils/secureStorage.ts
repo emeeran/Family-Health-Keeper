@@ -116,6 +116,28 @@ class SecureMemoryStorage {
     return Array.from(this.doctors.values());
   }
 
+  async addDoctor(doctor: Doctor): Promise<void> {
+    this.doctors.set(doctor.id, doctor);
+    this.logAuditEvent('ADD_DOCTOR', `Added doctor: ${doctor.name}`);
+  }
+
+  async updateDoctor(id: string, updates: Partial<Doctor>): Promise<void> {
+    const existing = this.doctors.get(id);
+    if (existing) {
+      const updated = { ...existing, ...updates };
+      this.doctors.set(id, updated);
+      this.logAuditEvent('UPDATE_DOCTOR', `Updated doctor: ${existing.name}`);
+    }
+  }
+
+  async deleteDoctor(id: string): Promise<void> {
+    const doctor = this.doctors.get(id);
+    if (doctor) {
+      this.doctors.delete(id);
+      this.logAuditEvent('DELETE_DOCTOR', `Deleted doctor: ${doctor.name}`);
+    }
+  }
+
   // Data management
   async addPatient(patient: Patient): Promise<void> {
     this.patients.set(patient.id, patient);

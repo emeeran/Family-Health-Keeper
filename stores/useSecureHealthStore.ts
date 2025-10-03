@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { secureStorage } from '../services/secureStorageService';
 import type { Patient, MedicalRecord, Doctor, Document, Reminder, Medication } from '../types';
+import { DOCTORS } from '../constants';
 
 interface SecureHealthState {
   // Patient and Record State
@@ -139,11 +140,20 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
   // Doctor Actions
   loadDoctors: async () => {
     try {
-      const doctors = await secureStorage.loadDoctors();
+      let doctors = await secureStorage.loadDoctors();
+      
+      // If no doctors in storage, initialize with defaults from constants
+      if (doctors.length === 0) {
+        doctors = [...DOCTORS];
+        // Save the initial doctors to storage
+        await secureStorage.saveDoctors(doctors);
+      }
+      
       set({ doctors });
     } catch (error) {
       console.error('Failed to load doctors:', error);
-      set({ doctors: [] });
+      // Fallback to constants if load fails
+      set({ doctors: [...DOCTORS] });
     }
   },
 
