@@ -7,6 +7,7 @@ import { LazyAIAssistant } from '../../../utils/lazyComponents';
 import ReminderList from '../../../components/ReminderList';
 import CustomInsights from '../../../components/CustomInsights';
 import DrugInteractions from '../../../components/DrugInteractions';
+import { EyeCareModule } from '../../../components/EyeCareModule';
 
 interface PatientDetailsProps {
   patient: Patient;
@@ -266,6 +267,8 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
         />
 
         <DrugInteractions medications={patient.currentMedications} />
+
+      <EyeCareModule patientId={patient.id} />
 
       <div className="space-y-2 pb-6 border-b border-border-light dark:border-border-dark">
         <div className="flex justify-between items-center">

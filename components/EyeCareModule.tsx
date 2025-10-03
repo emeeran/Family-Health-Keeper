@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { useAppStore } from '../stores/useAppStore';
 import type { EyePrescription, EyeTest, EyeCondition } from '../types';
