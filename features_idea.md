@@ -1,0 +1,5 @@
+- when re-viewing visits, AI generated overview should shown based on the records attached and the C/c, Ix, Dx, Rx, Additional Notes. This should be called " Overview Of this Visit" instead og HealthGemma Insights
+- Overview of visit should neatly MD formatted
+- While medical records, should be able to attach multiple documents.
+- All documents attached should be auto-parsed and saved as electronic health records.
+- From recent prescriptions. Medicines should be auto-populated in currently taking medicine display.
