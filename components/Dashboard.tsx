@@ -4,6 +4,7 @@ import AppointmentManager from '../src/components/AppointmentManager';
 import AIAssistant from './AIAssistant';
 import HealthInsights from './HealthInsights';
 import CurrentMedications from './CurrentMedications';
+import DataSearchPanel from './DataSearchPanel';
 import { EyeCareModule } from './EyeCareModule';
 import { DiabetesModule } from './DiabetesModule';
 
@@ -223,7 +224,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </div>
 
-  
+            {/* Medical Data Search */}
+            <DataSearchPanel patientId={patient.id} patientName={patient.name} />
+
             {/* Health Insights */}
             <HealthInsights
                 patient={patient}

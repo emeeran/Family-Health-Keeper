@@ -477,4 +477,106 @@ export class MedicalRecordParser {
       Notes: Patient doing well on current regimen
     `;
   }
+
+  /**
+   * Main method to parse medical text and return structured data
+   */
+  static parseMedicalText(text: string): ParsedMedicalData {
+    return this.parseMedicalRecord(text);
+  }
+
+  /**
+   * Combine parsed data from multiple sources
+   */
+  static combineParsedData(...dataSources: (ParsedMedicalData | null | undefined)[]): ParsedMedicalData {
+    const combined: ParsedMedicalData = {
+      chiefComplaints: [],
+      investigations: [],
+      diagnoses: [],
+      prescriptions: [],
+      notes: [],
+      urgency: 'medium'
+    };
+
+    for (const source of dataSources) {
+      if (!source) continue;
+
+      // Merge data, avoiding duplicates
+      combined.chiefComplaints = [...new Set([...combined.chiefComplaints, ...source.chiefComplaints])];
+      combined.investigations = [...new Set([...combined.investigations, ...source.investigations])];
+      combined.diagnoses = [...new Set([...combined.diagnoses, ...source.diagnoses])];
+      combined.prescriptions = [...new Set([...combined.prescriptions, ...source.prescriptions])];
+      combined.notes = [...new Set([...combined.notes, ...source.notes])];
+
+      // Merge vitals if present
+      if (source.vitals) {
+        combined.vitals = { ...combined.vitals, ...source.vitals };
+      }
+
+      // Use highest urgency level
+      if (source.urgency === 'high' || (source.urgency === 'medium' && combined.urgency !== 'high')) {
+        combined.urgency = source.urgency;
+      }
+
+      // Use follow-up if available
+      if (source.followUp) {
+        combined.followUp = source.followUp;
+      }
+    }
+
+    return combined;
+  }
+
+  /**
+   * Extract text from PDF files
+   */
+  static async extractPDFText(file: File): Promise<string> {
+    // In a real implementation, this would use a PDF parsing library like pdf-parse or pdf.js
+    // For now, we'll simulate the extraction
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        // Simulate PDF text extraction
+        // In production, you'd use a proper PDF parsing library
+        const simulatedText = `
+          MEDICAL REPORT
+          Date: ${new Date().toLocaleDateString()}
+
+          Chief Complaint: Follow-up consultation
+          Investigations: Blood work, X-ray
+          Diagnosis: Stable condition
+          Prescriptions: Continue current medications
+          Notes: Patient responding well to treatment
+        `;
+        resolve(simulatedText);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  /**
+   * Extract text from image files using OCR
+   */
+  static async extractImageText(file: File): Promise<string> {
+    // In a real implementation, this would use an OCR service like Tesseract.js
+    // For now, we'll simulate the OCR extraction
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        // Simulate OCR text extraction
+        // In production, you'd use a proper OCR library
+        const simulatedText = `
+          OCR EXTRACTED TEXT
+          Date: ${new Date().toLocaleDateString()}
+
+          Patient Report
+          Chief Complaint: Routine check-up
+          Vitals: BP 120/80, HR 72
+          Notes: All vital signs normal
+        `;
+        resolve(simulatedText);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 }

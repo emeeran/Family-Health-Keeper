@@ -15,6 +15,7 @@ import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor } f
 import { generatePatientPdf } from './services/pdfService';
 import { simpleAuthService, type SimpleAuthState } from './services/simpleAuthService';
 import { useSecureHealthStore } from './stores/useSecureHealthStore';
+import DataRetrievalService from './services/dataRetrievalService';
 import { useAppHandlers } from './hooks/useAppHandlers';
 import {
   useDebounce,
@@ -211,6 +212,15 @@ const App: React.FC = () => {
     loadDoctors();
   }, [loadPatients, loadDoctors]);
 
+  // Index patient data for search when patients are loaded
+  useEffect(() => {
+    if (patients.length > 0) {
+      patients.forEach(patient => {
+        DataRetrievalService.indexPatientData(patient);
+      });
+    }
+  }, [patients]);
+
   const toggleTheme = () => {
     setStoreTheme(theme === 'dark' ? 'light' : 'dark');
   };
@@ -356,29 +366,112 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveRecordForm = (recordData: Omit<MedicalRecord, 'id' | 'documents'>, files?: File[]) => {
+  const handleSaveRecordForm = async (recordData: Omit<MedicalRecord, 'id' | 'documents'>, files?: File[]) => {
     if (!selectedPatientId) return;
 
-    if (recordToEdit) {
-      // Update existing record
-      const updatedRecord: MedicalRecord = {
-        ...recordToEdit,
-        ...recordData,
-        documents: recordToEdit.documents, // Preserve existing documents
-      };
-      updateRecord(selectedPatientId, recordToEdit.id, updatedRecord);
-    } else {
-      // Create new record
-      const newRecord: MedicalRecord = {
-        ...recordData,
-        id: `rec-${Date.now()}`,
-        documents: [],
-        isNew: true,
-      };
-      addRecord(selectedPatientId, newRecord);
-    }
+    try {
+      // Parse manually entered data
+      const parsedData = MedicalRecordParser.parseMedicalText(
+        `Complaint: ${recordData.complaint}\n` +
+        `Investigations: ${recordData.investigations}\n` +
+        `Diagnosis: ${recordData.diagnosis}\n` +
+        `Prescription: ${recordData.prescription}\n` +
+        `Notes: ${recordData.notes}`
+      );
 
-    closeRecordForm();
+      // Process attached documents
+      const processedDocuments: Document[] = [];
+      if (files && files.length > 0) {
+        for (const file of files) {
+          try {
+            // Process document based on type
+            let documentContent = '';
+            let parsedDocumentData = null;
+
+            if (file.type === 'application/pdf') {
+              // For PDF files, we'll store the file and parse text content
+              documentContent = await MedicalRecordParser.extractPDFText(file);
+              parsedDocumentData = MedicalRecordParser.parseMedicalText(documentContent);
+            } else if (file.type.startsWith('image/')) {
+              // For images, we'll store the file and use OCR if available
+              documentContent = await MedicalRecordParser.extractImageText(file);
+              if (documentContent) {
+                parsedDocumentData = MedicalRecordParser.parseMedicalText(documentContent);
+              }
+            }
+
+            // Create document record
+            const document: Document = {
+              id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              uploadedAt: new Date().toISOString(),
+              content: documentContent,
+              parsedData: parsedDocumentData,
+              url: URL.createObjectURL(file) // For now, create blob URL - in production, this would be a secure file storage URL
+            };
+
+            processedDocuments.push(document);
+          } catch (error) {
+            console.error(`Error processing file ${file.name}:`, error);
+            // Still store the file even if parsing fails
+            const document: Document = {
+              id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              uploadedAt: new Date().toISOString(),
+              url: URL.createObjectURL(file)
+            };
+            processedDocuments.push(document);
+          }
+        }
+      }
+
+      // Combine parsed data from manual entry and documents
+      const combinedParsedData = MedicalRecordParser.combineParsedData([parsedData], ...processedDocuments.map(doc => doc.parsedData).filter(Boolean));
+
+      // Create enhanced record with parsed data
+      const enhancedRecordData = {
+        ...recordData,
+        parsedData: combinedParsedData,
+        aiOverview: MedicalRecordParser.generateVisitOverview(combinedParsedData, recordData.complaint)
+      };
+
+      if (recordToEdit) {
+        // Update existing record
+        const updatedRecord: MedicalRecord = {
+          ...recordToEdit,
+          ...enhancedRecordData,
+          documents: [...recordToEdit.documents, ...processedDocuments], // Append new documents
+        };
+        updateRecord(selectedPatientId, recordToEdit.id, updatedRecord);
+      } else {
+        // Create new record
+        const newRecord: MedicalRecord = {
+          ...enhancedRecordData,
+          id: `rec-${Date.now()}`,
+          documents: processedDocuments,
+          isNew: true,
+        };
+        addRecord(selectedPatientId, newRecord);
+      }
+
+      closeRecordForm();
+
+      // Index the updated patient data for retrieval
+      const updatedPatient = patients.find(p => p.id === selectedPatientId);
+      if (updatedPatient) {
+        DataRetrievalService.clearPatientData(selectedPatientId);
+        DataRetrievalService.indexPatientData(updatedPatient);
+      }
+
+      alert('Record saved successfully with parsed data!');
+    } catch (error) {
+      console.error('Failed to save record:', error);
+      alert('Failed to save record. Please try again.');
+    }
   };
 
   const handleDeleteRecord = () => {

@@ -3,8 +3,12 @@
 export interface Document {
   id: string;
   name: string;
-  type: 'pdf' | 'image';
+  type: string;
+  size: number;
+  uploadedAt: string;
   url: string;
+  content?: string;
+  parsedData?: import('../services/medicalRecordParser').ParsedMedicalData;
 }
 
 export interface Doctor {
@@ -25,6 +29,8 @@ export interface MedicalRecord {
   prescription: string;
   notes: string;
   documents: Document[];
+  parsedData?: import('../services/medicalRecordParser').ParsedMedicalData;
+  aiOverview?: import('../services/medicalRecordParser').VisitOverview;
   isNew?: boolean;
 }
 
