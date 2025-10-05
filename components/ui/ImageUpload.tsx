@@ -20,7 +20,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   onImagesCompressed,
   multiple = false,
   acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'],
-  maxSizeMB = 10,
+  maxSizeMB = 20,
   compressionOptions,
   className = '',
   disabled = false,

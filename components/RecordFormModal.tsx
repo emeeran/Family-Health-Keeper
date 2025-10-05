@@ -97,13 +97,13 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
     const fileArray = Array.from(files);
     const validFiles = fileArray.filter(file => {
       const isValidType = file.type.startsWith('image/') || file.type === 'application/pdf';
-      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
+      const isValidSize = file.size <= 20 * 1024 * 1024; // 20MB
       return isValidType && isValidSize;
     });
 
     if (validFiles.length !== fileArray.length) {
       const invalidCount = fileArray.length - validFiles.length;
-      alert(`${invalidCount} file(s) were skipped. Only images (PNG, JPG) and PDF files up to 10MB are allowed.`);
+      alert(`${invalidCount} file(s) were skipped. Only images (PNG, JPG) and PDF files up to 20MB are allowed.`);
     }
 
     setSelectedFiles(prev => [...prev, ...validFiles]);
@@ -325,7 +325,7 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
                     Attach Documents
                   </h3>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    Max 10MB
+                    Max 20MB
                   </span>
                 </div>
 

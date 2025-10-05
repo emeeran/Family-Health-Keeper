@@ -390,9 +390,10 @@ const CurrentMedications: React.FC<CurrentMedicationsProps> = memo(
             onClick={() => setModalState({ isOpen: true, medication: null })}
             disabled={modalState.isOpen}
             className='flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-secondary rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+            title="Add Medication"
+            aria-label="Add Medication"
           >
-            <span className='material-symbols-outlined text-base'>add</span>
-            <span>Add Medication</span>
+            <span className='material-symbols-outlined text-base'>medication</span>
           </button>
         </div>
 

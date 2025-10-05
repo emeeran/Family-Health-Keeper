@@ -303,7 +303,7 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
                                     <p className="mb-2 text-sm text-subtle-light dark:text-subtle-dark">
                                         <span className="font-semibold text-primary-DEFAULT">Click to upload</span> or drag and drop
                                     </p>
-                                    <p className="text-xs text-subtle-light dark:text-subtle-dark">Images (PNG, JPG) or PDF files up to 10MB</p>
+                                    <p className="text-xs text-subtle-light dark:text-subtle-dark">Images (PNG, JPG) or PDF files up to 20MB</p>
                                 </div>
                                 <input
                                     id="file-upload"

@@ -264,7 +264,7 @@ const NewRecordModal: React.FC<NewRecordModalProps> = ({
                   Click to upload or drag and drop
                 </p>
                 <p className='text-xs text-subtle-light dark:text-subtle-dark'>
-                  PDF files, images (JPG, PNG) up to 10MB each
+                  PDF files, images (JPG, PNG) up to 20MB each
                 </p>
                 <input
                   ref={fileInputRef}

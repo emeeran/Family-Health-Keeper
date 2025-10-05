@@ -23,7 +23,7 @@ import {
   useMemoizedCallback
 } from './hooks/usePerformanceOptimizations';
 
-const MAX_FILE_SIZE_MB = 10;
+const MAX_FILE_SIZE_MB = 20;
 
 const App: React.FC = () => {
   const { measureOperation } = usePerformanceMonitor('App');
