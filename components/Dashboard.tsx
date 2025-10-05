@@ -34,8 +34,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
     // Calculate health metrics and insights
     const healthMetrics = useMemo(() => {
-        const totalRecords = patient.records.length;
-        const totalMedications = patient.currentMedications.length;
+                const totalMedications = patient.currentMedications.length;
         const activeReminders = patient.reminders.filter(r => !r.completed).length;
 
         // Get unique diagnoses from records
@@ -53,7 +52,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             .slice(0, 3);
 
         return {
-            totalRecords,
             totalMedications,
             activeReminders,
             uniqueDiagnoses,
@@ -193,17 +191,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-subtle-light dark:text-subtle-dark">Total Records</p>
-                            <p className="text-2xl font-bold text-text-light dark:text-text-dark">{healthMetrics.totalRecords}</p>
-                        </div>
-                        <span className="material-symbols-outlined text-3xl text-blue-600">folder</span>
-                    </div>
-                </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                         <div>

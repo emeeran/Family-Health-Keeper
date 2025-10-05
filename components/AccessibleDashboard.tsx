@@ -47,8 +47,7 @@ const AccessibleDashboard: React.FC<DashboardProps> = ({
 
   // Calculate health metrics and insights
   const healthMetrics = useMemo(() => {
-    const totalRecords = patient.records.length;
-    const totalMedications = patient.currentMedications.length;
+        const totalMedications = patient.currentMedications.length;
     const activeReminders = patient.reminders.filter(r => !r.completed).length;
 
     // Get unique diagnoses from records
@@ -69,7 +68,6 @@ const AccessibleDashboard: React.FC<DashboardProps> = ({
       .slice(0, 3);
 
     return {
-      totalRecords,
       totalMedications,
       activeReminders,
       uniqueDiagnoses,
@@ -460,38 +458,7 @@ const AccessibleDashboard: React.FC<DashboardProps> = ({
           <h2 id='stats-heading' className='sr-only'>
             Quick Health Statistics
           </h2>
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-            <div
-              className={`bg-white dark:bg-gray-800 p-6 rounded-lg border ${
-                highContrastMode
-                  ? 'border-2 border-gray-600'
-                  : 'border-gray-200 dark:border-gray-700'
-              } focus-within:ring-2 focus-within:ring-primary-500 focus-within:outline-none`}
-              tabIndex={0}
-              role='article'
-              aria-label={`Total medical records: ${healthMetrics.totalRecords}`}
-            >
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className='text-sm font-medium text-subtle-light dark:text-subtle-dark'>
-                    Total Records
-                  </p>
-                  <p
-                    className='text-2xl font-bold text-text-light dark:text-text-dark'
-                    aria-live='polite'
-                  >
-                    {healthMetrics.totalRecords}
-                  </p>
-                </div>
-                <span
-                  className='material-symbols-outlined text-3xl text-blue-600'
-                  aria-hidden='true'
-                >
-                  folder
-                </span>
-              </div>
-            </div>
-
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
             <div
               className={`bg-white dark:bg-gray-800 p-6 rounded-lg border ${
                 highContrastMode

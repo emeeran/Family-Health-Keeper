@@ -30,8 +30,10 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
     const patientName = selectedPatient?.name || 'No Person Selected';
     const patientInitial = selectedPatient?.name?.charAt(0).toUpperCase() || '?';
-    const userName = user?.name || 'User';
-    const userInitial = user?.name?.charAt(0).toUpperCase() || 'U';
+    const userFirstName = user?.firstName || '';
+    const userLastName = user?.lastName || '';
+    const userName = userFirstName && userLastName ? `${userFirstName} ${userLastName}` : userFirstName || userLastName || 'User';
+    const userInitial = userFirstName ? userFirstName.charAt(0).toUpperCase() : 'U';
 
     return (
         <header className="bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-lg border-b border-border-light/50 dark:border-border-dark/50 p-6 flex items-center justify-between sticky top-0 z-10 gap-4 shrink-0 shadow-sm">

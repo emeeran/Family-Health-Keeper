@@ -803,9 +803,9 @@ const App: React.FC = () => {
               user={authState.user ? {
                 id: authState.user.id,
                 email: authState.user.email,
-                username: authState.user.name,
-                firstName: authState.user.name.split(' ')[0],
-                lastName: authState.user.name.split(' ')[1] || '',
+                username: authState.user.name || authState.user.email,
+                firstName: authState.user.name ? authState.user.name.split(' ')[0] : authState.user.email.split('@')[0],
+                lastName: authState.user.name && authState.user.name.includes(' ') ? authState.user.name.split(' ').slice(1).join(' ') : '',
                 role: authState.user.role as 'admin' | 'user' | 'family_member',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
