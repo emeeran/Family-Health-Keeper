@@ -7,8 +7,8 @@
   # Directory where build outputs are stored
   publish = "dist"
   
-  # Build command - Netlify auto-runs npm ci (or npm install) before this
-  command = "npm run build"
+  # Build command - Ensure devDependencies are installed for build
+  command = "npm install && npm run build"
   
   # Functions directory (if needed in future)
   functions = "netlify/functions"
