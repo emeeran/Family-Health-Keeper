@@ -979,23 +979,43 @@ const App: React.FC = () => {
       )}
 
       {/* Record Details Slide-out Panel - Only show when authenticated */}
-      {authState.isAuthenticated && selectedPatient && formState && (
-        <RecordDetailsPanel
-          patient={selectedPatient}
-          record={formState}
-          isOpen={!!formState}
-          onClose={() => {
+      {authState.isAuthenticated && selectedPatient && formState && (() => {
+        // Create handlers for the current record
+        const handleEditCurrentRecord = () => {
+          if (formState) {
+            handleEditRecordModal(formState);
+          }
+        };
+
+        const handleDeleteCurrentRecord = () => {
+          if (formState) {
+            handleDeleteRecordDirect(formState.id);
+            // Close the panel after deletion
             setSelectedRecord(null);
             setFormStateRecord(null);
-          }}
-          onFormChange={handleFormChange}
-          onFileUpload={handleFileUpload}
-          onDeleteDocument={handleDeleteDocument}
-          onRenameDocument={handleRenameDocument}
-          isEditing={isEditingRecord}
-          doctors={doctors}
-        />
-      )}
+          }
+        };
+
+        return (
+          <RecordDetailsPanel
+            patient={selectedPatient}
+            record={formState}
+            isOpen={!!formState}
+            onClose={() => {
+              setSelectedRecord(null);
+              setFormStateRecord(null);
+            }}
+            onFormChange={handleFormChange}
+            onFileUpload={handleFileUpload}
+            onDeleteDocument={handleDeleteDocument}
+            onRenameDocument={handleRenameDocument}
+            isEditing={isEditingRecord}
+            doctors={doctors}
+            onEditRecord={handleEditCurrentRecord}
+            onDeleteRecord={handleDeleteCurrentRecord}
+          />
+        );
+      })()}
 
       {/* Modals - Only show when authenticated */}
       {authState.isAuthenticated && (

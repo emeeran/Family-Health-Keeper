@@ -13,6 +13,8 @@ interface RecordDetailsPanelProps {
     onRenameDocument: (documentId: string, newName: string) => void;
     isEditing: boolean;
     doctors: Doctor[];
+    onEditRecord?: () => void;
+    onDeleteRecord?: () => void;
 }
 
 const RecordDetailsPanel: React.FC<RecordDetailsPanelProps> = ({
@@ -26,6 +28,8 @@ const RecordDetailsPanel: React.FC<RecordDetailsPanelProps> = ({
     onRenameDocument,
     isEditing,
     doctors,
+    onEditRecord,
+    onDeleteRecord,
 }) => {
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [renamingDocId, setRenamingDocId] = useState<string | null>(null);
@@ -110,13 +114,38 @@ const RecordDetailsPanel: React.FC<RecordDetailsPanelProps> = ({
                             <p className="text-sm text-subtle-light dark:text-subtle-dark">{new Date(record.date).toLocaleDateString()}</p>
                         </div>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark rounded-lg transition-colors"
-                        aria-label="Close panel"
-                    >
-                        <span className="material-symbols-outlined text-2xl text-subtle-light dark:text-subtle-dark">close</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {/* Edit and Delete Quick Links */}
+                        <div className="flex items-center gap-1 mr-2">
+                            {!isEditing && onEditRecord && (
+                                <button
+                                    onClick={onEditRecord}
+                                    className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors group"
+                                    title="Edit record"
+                                    aria-label="Edit record"
+                                >
+                                    <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">edit</span>
+                                </button>
+                            )}
+                            {onDeleteRecord && (
+                                <button
+                                    onClick={onDeleteRecord}
+                                    className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors group"
+                                    title="Delete record"
+                                    aria-label="Delete record"
+                                >
+                                    <span className="material-symbols-outlined text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform">delete</span>
+                                </button>
+                            )}
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark rounded-lg transition-colors"
+                            aria-label="Close panel"
+                        >
+                            <span className="material-symbols-outlined text-2xl text-subtle-light dark:text-subtle-dark">close</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content - Scrollable */}
