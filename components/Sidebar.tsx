@@ -25,7 +25,7 @@ interface SidebarProps {
     doctors: Doctor[];
     onOpenDoctorModal: (doctor: Doctor | null) => void;
     onDeleteDoctor: (id: string) => void;
-    onEditRecord: (record: MedicalRecord) => void;
+    onEditRecordModal: (record: MedicalRecord) => void;
     onDeleteRecordDirect: (recordId: string) => void;
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
@@ -237,47 +237,51 @@ const Sidebar: React.FC<SidebarProps> = ({
 
             {/* Top Actions */}
             {!isCollapsed && (
-                <div className="p-4 space-y-3 shrink-0 border-b border-border-light/50 dark:border-border-dark/50 bg-surface-hover-light/30 dark:bg-surface-hover-dark/30">
-                    <button
-                        onClick={onNewPatient}
-                        aria-label="Add a new family member"
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 rounded-xl transition-all-200 shadow-button hover:shadow-button-hover active:scale-95 focus-ring"
-                    >
-                        <span className="material-symbols-outlined">person_add</span>
-                        <span>Add Family Member</span>
-                    </button>
-                    <button
-                        onClick={onNewRecord}
-                        disabled={!selectedPatient}
-                        aria-label="Add a new medical record for the selected person"
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-text-light dark:text-text-dark bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark transition-all-200 shadow-sm hover:shadow-button disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none focus-ring"
-                    >
-                        <span className="material-symbols-outlined">add_circle</span>
-                        <span>Add Medical Record</span>
-                    </button>
+                <div className="p-4 shrink-0 border-b border-border-light/50 dark:border-border-dark/50 bg-surface-hover-light/30 dark:bg-surface-hover-dark/30">
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            onClick={onNewPatient}
+                            aria-label="Add a new family member"
+                            className="flex items-center justify-center gap-2 px-3 py-3 text-sm font-semibold text-white bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 rounded-xl transition-all-200 shadow-button hover:shadow-button-hover active:scale-95 focus-ring"
+                        >
+                            <span className="material-symbols-outlined">person_add</span>
+                            <span>Add Member</span>
+                        </button>
+                        <button
+                            onClick={onNewRecord}
+                            disabled={!selectedPatient}
+                            aria-label="Add a new medical record"
+                            className="flex items-center justify-center gap-2 px-3 py-3 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-xl transition-all-200 shadow-button hover:shadow-button-hover active:scale-95 focus-ring disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                        >
+                            <span className="material-symbols-outlined">add_circle</span>
+                            <span>Add Record</span>
+                        </button>
+                    </div>
                 </div>
             )}
 
             {/* Collapsed Quick Actions */}
             {isCollapsed && (
-                <div className="p-2 space-y-2 shrink-0 border-b border-border-light/50 dark:border-border-dark/50">
-                    <button
-                        onClick={onNewPatient}
-                        aria-label="Add a new family member"
-                        className="w-full p-3 text-secondary-500 hover:text-secondary-600 hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark rounded-lg transition-all-200"
-                        title="Add Family Member"
-                    >
-                        <span className="material-symbols-outlined text-2xl">person_add</span>
-                    </button>
-                    <button
-                        onClick={onNewRecord}
-                        disabled={!selectedPatient}
-                        aria-label="Add a new medical record for the selected person"
-                        className="w-full p-3 text-text-light dark:text-text-dark hover:text-primary-DEFAULT hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark rounded-lg transition-all-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Add Medical Record"
-                    >
-                        <span className="material-symbols-outlined text-2xl">add_circle</span>
-                    </button>
+                <div className="p-2 shrink-0 border-b border-border-light/50 dark:border-border-dark/50">
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={onNewPatient}
+                            aria-label="Add a new family member"
+                            className="w-full p-3 text-secondary-500 hover:text-secondary-600 hover:bg-surface-hover-light dark:hover:bg-surface-hover-dark rounded-lg transition-all-200"
+                            title="Add Family Member"
+                        >
+                            <span className="material-symbols-outlined text-2xl">person_add</span>
+                        </button>
+                        <button
+                            onClick={onNewRecord}
+                            disabled={!selectedPatient}
+                            aria-label="Add a new medical record"
+                            className="w-full p-3 text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-all-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Add Record"
+                        >
+                            <span className="material-symbols-outlined text-2xl">add_circle</span>
+                        </button>
+                    </div>
                 </div>
             )}
             

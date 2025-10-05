@@ -20,8 +20,8 @@ interface DashboardProps {
     onDeleteMedication?: (patientId: string, medicationId: string) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ 
-    patient, 
+const Dashboard: React.FC<DashboardProps> = ({
+    patient,
     onViewDetails,
     doctors = [],
     onAddAppointment,
