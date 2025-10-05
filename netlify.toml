@@ -29,18 +29,18 @@
 
 # Production context
 [context.production]
-  command = "npm run build"
-  
+  command = "npm install && npm run build"
+
 [context.production.environment]
   NODE_ENV = "production"
 
 # Deploy preview context
 [context.deploy-preview]
-  command = "npm run build"
+  command = "npm install && npm run build"
 
 # Branch deploy context
 [context.branch-deploy]
-  command = "npm run build"
+  command = "npm install && npm run build"
 
 # Headers for security and performance
 [[headers]]
