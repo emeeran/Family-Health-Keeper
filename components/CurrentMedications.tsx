@@ -1,7 +1,8 @@
-import React, { useState, useEffect, memo, useMemo } from 'react';
-import { AlertCircle, Clock, CheckCircle, Plus } from 'lucide-react';
-import type { Patient, Medication } from '../types';
+import React, { useState, useEffect, memo, useMemo, useCallback } from 'react';
+import { AlertCircle, Clock, CheckCircle, Plus, Pill } from 'lucide-react';
+import type { Patient, Medication, Doctor } from '../types';
 import { MedicationReconciliationService } from '../services/medicationReconciliation';
+import BulkMedicationModal from './BulkMedicationModal';
 
 interface MedicationModalProps {
   isOpen: boolean;
@@ -301,19 +302,64 @@ const MedicationModal: React.FC<MedicationModalProps> = ({
 
 interface CurrentMedicationsProps {
   patient: Patient;
+  doctors?: Doctor[];
   onAddMedication: (patientId: string, medication: Omit<Medication, 'id'>) => void;
+  onAddBulkMedications: (patientId: string, medications: Omit<Medication, 'id'>[]) => void;
   onUpdateMedication: (patientId: string, medication: Medication) => void;
   onDeleteMedication: (patientId: string, medicationId: string) => void;
   onRequestReminder: (medicationData: Omit<Medication, 'id'>) => void;
 }
 
 const CurrentMedications: React.FC<CurrentMedicationsProps> = memo(
-  ({ patient, onAddMedication, onUpdateMedication, onDeleteMedication, onRequestReminder }) => {
+  ({ patient, doctors = [], onAddMedication, onAddBulkMedications, onUpdateMedication, onDeleteMedication, onRequestReminder }) => {
     const [modalState, setModalState] = useState<{
       isOpen: boolean;
       medication: Medication | null;
     }>({ isOpen: false, medication: null });
     const [showReconciliationAlert, setShowReconciliationAlert] = useState(false);
+    const [bulkModalState, setBulkModalState] = useState<{
+      isOpen: boolean;
+      editingMedications: Medication[];
+    }>({ isOpen: false, editingMedications: [] });
+
+    // Keyboard shortcuts for quick access
+    useEffect(() => {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        // Only trigger shortcuts when not in input fields
+        const target = event.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+          return;
+        }
+
+        // Ctrl+B or Cmd+B for bulk add
+        if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
+          event.preventDefault();
+          if (!bulkModalState.isOpen && !modalState.isOpen) {
+            setBulkModalState({ isOpen: true, editingMedications: [] });
+          }
+        }
+
+        // Ctrl+M or Cmd+M for single add
+        if ((event.ctrlKey || event.metaKey) && event.key === 'm') {
+          event.preventDefault();
+          if (!modalState.isOpen && !bulkModalState.isOpen) {
+            setModalState({ isOpen: true, medication: null });
+          }
+        }
+
+        // Escape to close any open modal
+        if (event.key === 'Escape') {
+          if (bulkModalState.isOpen) {
+            setBulkModalState({ isOpen: false, editingMedications: [] });
+          } else if (modalState.isOpen) {
+            setModalState({ isOpen: false, medication: null });
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [bulkModalState.isOpen, modalState.isOpen]);
 
     // Check for medication reconciliation whenever records or medications change
     const reconciliationResult = useMemo(() => {
@@ -386,15 +432,44 @@ const CurrentMedications: React.FC<CurrentMedicationsProps> = memo(
               Current Medications
             </h4>
           </div>
-          <button
-            onClick={() => setModalState({ isOpen: true, medication: null })}
-            disabled={modalState.isOpen}
-            className='flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-secondary rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-            title="Add Medication"
-            aria-label="Add Medication"
-          >
-            <span className='material-symbols-outlined text-base'>medication</span>
-          </button>
+          <div className='flex items-center gap-2'>
+            <div className="relative group">
+              <button
+                onClick={() => setBulkModalState({ isOpen: true, editingMedications: [] })}
+                disabled={bulkModalState.isOpen || modalState.isOpen}
+                className='flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md'
+                title="Add Multiple Medications (Ctrl+B)"
+                aria-label="Add Multiple Medications with smart templates and quick entry (Ctrl+B)"
+              >
+                <Plus className='w-4 h-4' />
+                <span className='hidden sm:inline'>Bulk Add</span>
+                <span className="hidden lg:inline ml-1 text-xs bg-blue-700 px-1.5 py-0.5 rounded">⌘B</span>
+              </button>
+              {/* Tooltip */}
+              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block z-50">
+                <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 whitespace-nowrap shadow-lg">
+                  <div className="font-semibold mb-1">Streamlined Bulk Entry</div>
+                  <div className="text-gray-300">• Smart templates</div>
+                  <div className="text-gray-300">• Auto-completion</div>
+                  <div className="text-gray-300">• Quick combinations</div>
+                  <div className="text-blue-300 mt-1 pt-1 border-t border-gray-700">Press ⌘B or Ctrl+B</div>
+                  <div className="absolute top-full right-2 -mt-1">
+                    <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setModalState({ isOpen: true, medication: null })}
+              disabled={modalState.isOpen || bulkModalState.isOpen}
+              className='flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-secondary rounded-md hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+              title="Add Single Medication (Ctrl+M)"
+              aria-label="Add Single Medication (Ctrl+M)"
+            >
+              <span className='material-symbols-outlined text-base'>medication</span>
+              <span className='hidden sm:inline ml-1'>Add</span>
+            </button>
+          </div>
         </div>
 
         {/* Medication Reconciliation Alert */}
@@ -521,6 +596,16 @@ const CurrentMedications: React.FC<CurrentMedicationsProps> = memo(
           medication={modalState.medication}
           onSave={handleSave}
           onClose={() => setModalState({ isOpen: false, medication: null })}
+        />
+        <BulkMedicationModal
+          isOpen={bulkModalState.isOpen}
+          editingMedications={bulkModalState.editingMedications}
+          doctors={doctors}
+          onSave={(medications) => {
+            onAddBulkMedications(patient.id, medications);
+            setBulkModalState({ isOpen: false, editingMedications: [] });
+          }}
+          onClose={() => setBulkModalState({ isOpen: false, editingMedications: [] })}
         />
       </div>
     );

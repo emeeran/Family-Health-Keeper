@@ -241,24 +241,10 @@ export class CentralizedErrorHandler {
     // Log error using both systems
     if (logError) {
       // Log using existing ErrorHandler
-      ErrorHandler.logError(error, enhancedContext);
+      ErrorHandler.logError(unifiedError);
 
       // Log using errorLogger
-      const loggerError: LoggerAppError = {
-        ...error,
-        name: error.name,
-        message: error.message,
-        code: `${category.toUpperCase()}_${severity.toUpperCase()}`,
-        severity,
-        timestamp: new Date(),
-        context: {
-          ...enhancedContext,
-          originalError: error
-        },
-        retryable
-      } as LoggerAppError;
-
-      errorLogger.logError(loggerError, enhancedContext);
+      errorLogger.logError(error, enhancedContext);
     }
 
     // Show user message if appropriate

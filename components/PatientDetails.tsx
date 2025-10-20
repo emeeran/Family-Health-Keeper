@@ -22,6 +22,7 @@ interface PatientDetailsProps {
     onToggleReminder: (patientId: string, reminderId: string) => void;
     onDeleteReminder: (patientId: string, reminderId: string) => void;
     onAddMedication: (patientId: string, medication: Omit<Medication, 'id'>) => void;
+    onAddBulkMedications: (patientId: string, medications: Omit<Medication, 'id'>[]) => void;
     onUpdateMedication: (patientId: string, medication: Medication) => void;
     onDeleteMedication: (patientId: string, medicationId: string) => void;
     onAddAppointment?: (patientId: string, appointment: Omit<Appointment, 'id' | 'createdAt'>) => void;
@@ -43,6 +44,7 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
     onToggleReminder,
     onDeleteReminder,
     onAddMedication,
+    onAddBulkMedications,
     onUpdateMedication,
     onDeleteMedication,
     onAddAppointment,
@@ -181,6 +183,7 @@ const PatientDetails: React.FC<PatientDetailsProps> = ({
             <CurrentMedications
                 patient={patient}
                 onAddMedication={onAddMedication}
+                onAddBulkMedications={onAddBulkMedications}
                 onUpdateMedication={onUpdateMedication}
                 onDeleteMedication={onDeleteMedication}
                 onRequestReminder={handleRequestReminderForMed}

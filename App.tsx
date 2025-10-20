@@ -61,6 +61,7 @@ const App: React.FC = () => {
     toggleReminder,
     deleteReminder,
     addMedication,
+    addBulkMedications,
     updateMedication,
     deleteMedication,
     addAppointment,
@@ -607,6 +608,12 @@ const App: React.FC = () => {
     addMedication(patientId, medicationData);
   };
 
+  const handleAddBulkMedications = (patientId: string, medications: Omit<Medication, 'id'>[]) => {
+    // Use the dedicated bulk add action for better performance and reliability
+    addBulkMedications(patientId, medications);
+    announce(`Added ${medications.length} medications successfully`);
+  };
+
   const handleUpdateMedication = (patientId: string, updatedMedication: Medication) => {
     // Use store action to update medication
     updateMedication(patientId, updatedMedication);
@@ -945,6 +952,7 @@ const App: React.FC = () => {
                     onDeleteAppointment={handleDeleteAppointment}
                     onCreateReminderFromAppointment={handleCreateReminderFromAppointment}
                     onAddMedication={handleAddMedication}
+                    onAddBulkMedications={handleAddBulkMedications}
                     onUpdateMedication={handleUpdateMedication}
                     onDeleteMedication={handleDeleteMedication}
                   />

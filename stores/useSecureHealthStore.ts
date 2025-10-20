@@ -56,6 +56,7 @@ interface SecureHealthState {
 
   // Medication Actions
   addMedication: (patientId: string, medication: Omit<Medication, 'id'>) => Promise<void>;
+  addBulkMedications: (patientId: string, medications: Omit<Medication, 'id'>[]) => Promise<void>;
   updateMedication: (patientId: string, medication: Medication) => Promise<void>;
   deleteMedication: (patientId: string, medicationId: string) => Promise<void>;
 
@@ -462,7 +463,10 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
 
       if (patientIndex !== -1) {
         const updatedPatients = [...patients];
-        const newMedication: Medication = { ...medication, id: `med-${Date.now()}` };
+        const newMedication: Medication = {
+          ...medication,
+          id: `med-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+        };
         updatedPatients[patientIndex] = {
           ...updatedPatients[patientIndex],
           currentMedications: [...updatedPatients[patientIndex].currentMedications, newMedication]
@@ -473,6 +477,31 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to add medication:', error);
+    }
+  },
+
+  addBulkMedications: async (patientId: string, medications: Omit<Medication, 'id'>[]) => {
+    try {
+      const { patients } = get();
+      const patientIndex = patients.findIndex(p => p.id === patientId);
+
+      if (patientIndex !== -1) {
+        const updatedPatients = [...patients];
+        const newMedications: Medication[] = medications.map((medication, index) => ({
+          ...medication,
+          id: `med-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`
+        }));
+
+        updatedPatients[patientIndex] = {
+          ...updatedPatients[patientIndex],
+          currentMedications: [...updatedPatients[patientIndex].currentMedications, ...newMedications]
+        };
+
+        await secureStorage.savePatients(updatedPatients);
+        set({ patients: updatedPatients });
+      }
+    } catch (error) {
+      console.error('Failed to add bulk medications:', error);
     }
   },
 

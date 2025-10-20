@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { Patient, MedicalRecord, Medication, Reminder, Doctor, Appointment } from '../types';
 import AppointmentManager from '../src/components/AppointmentManager';
 import AIAssistant from './AIAssistant';
@@ -17,6 +17,7 @@ interface DashboardProps {
     onDeleteAppointment?: (patientId: string, appointmentId: string) => void;
     onCreateReminderFromAppointment?: (patientId: string, appointmentId: string) => void;
     onAddMedication?: (patientId: string, medication: Omit<Medication, 'id'>) => void;
+    onAddBulkMedications?: (patientId: string, medications: Omit<Medication, 'id'>[]) => void;
     onUpdateMedication?: (patientId: string, medication: Medication) => void;
     onDeleteMedication?: (patientId: string, medicationId: string) => void;
 }
@@ -30,6 +31,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     onDeleteAppointment,
     onCreateReminderFromAppointment,
     onAddMedication,
+    onAddBulkMedications,
     onUpdateMedication,
     onDeleteMedication,
 }) => {
@@ -170,6 +172,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         }
     };
 
+    // State for active tab in combined container
+    const [activeTab, setActiveTab] = useState<'medications' | 'insights'>('medications');
+
     return (
         <div className="p-6 space-y-6">
             {/* Header */}
@@ -227,58 +232,93 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Medical Data Search */}
             <DataSearchPanel patientId={patient.id} patientName={patient.name} />
 
-            {/* Health Insights */}
-            <HealthInsights
-                patient={patient}
-                documents={patient.records?.flatMap(record => record.documents || []) || []}
-            />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Current Medications - Now Dynamic */}
-                {onAddMedication && onUpdateMedication && onDeleteMedication && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                        <CurrentMedications
-                            patient={patient}
-                            onAddMedication={onAddMedication}
-                            onUpdateMedication={onUpdateMedication}
-                            onDeleteMedication={onDeleteMedication}
-                        />
-                    </div>
-                )}
-
-                {/* Health Insights */}
+            {/* Combined Current Medications and Health Insights - Full Width */}
+            {onAddMedication && onUpdateMedication && onDeleteMedication && (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    {/* Tab Navigation */}
                     <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                        <h2 className="text-lg font-semibold text-text-light dark:text-text-dark flex items-center gap-2">
-                            <span className="material-symbols-outlined text-blue-600">insights</span>
-                            Health Insights
-                        </h2>
-                    </div>
-                    <div className="p-4">
-                        {healthInsights.length > 0 ? (
-                            <div className="space-y-3">
-                                {healthInsights.map((insight, index) => (
-                                    <div key={index} className={`p-3 rounded-md ${getInsightBgColor(insight.type)}`}>
-                                        <div className="flex items-start gap-3">
-                                            <span className={`material-symbols-outlined ${getInsightIconColor(insight.type)}`}>
-                                                {insight.icon}
-                                            </span>
-                                            <div>
-                                                <p className="font-medium text-text-light dark:text-text-dark">{insight.title}</p>
-                                                <p className="text-sm text-subtle-light dark:text-subtle-dark">{insight.description}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => setActiveTab('medications')}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                        activeTab === 'medications'
+                                            ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    <span className="material-symbols-outlined align-middle mr-2">medication</span>
+                                    Current Medications
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('insights')}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                        activeTab === 'insights'
+                                            ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    <span className="material-symbols-outlined align-middle mr-2">insights</span>
+                                    Health Insights
+                                    {healthInsights.length > 0 && (
+                                        <span className="ml-2 px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
+                                            {healthInsights.length}
+                                        </span>
+                                    )}
+                                </button>
                             </div>
-                        ) : (
-                            <p className="text-subtle-light dark:text-subtle-dark text-center py-8">
-                                No specific insights at this time
-                            </p>
+                        </div>
+                    </div>
+
+                    {/* Tab Content */}
+                    <div className="p-0">
+                        {activeTab === 'medications' && (
+                            <div>
+                                <CurrentMedications
+                                    patient={patient}
+                                    doctors={doctors}
+                                    onAddMedication={onAddMedication}
+                                    onAddBulkMedications={onAddBulkMedications}
+                                    onUpdateMedication={onUpdateMedication}
+                                    onDeleteMedication={onDeleteMedication}
+                                />
+                            </div>
+                        )}
+
+                        {activeTab === 'insights' && (
+                            <div className="p-4">
+                                {healthInsights.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {healthInsights.map((insight, index) => (
+                                            <div key={index} className={`p-3 rounded-md ${getInsightBgColor(insight.type)}`}>
+                                                <div className="flex items-start gap-3">
+                                                    <span className={`material-symbols-outlined ${getInsightIconColor(insight.type)}`}>
+                                                        {insight.icon}
+                                                    </span>
+                                                    <div>
+                                                        <p className="font-medium text-text-light dark:text-text-dark">{insight.title}</p>
+                                                        <p className="text-sm text-subtle-light dark:text-subtle-dark">{insight.description}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <span className="material-symbols-outlined text-4xl text-gray-300 dark:text-gray-600 mb-2">insights</span>
+                                        <p className="text-subtle-light dark:text-subtle-dark">
+                                            No specific insights at this time
+                                        </p>
+                                        <p className="text-xs text-subtle-light dark:text-subtle-dark mt-1">
+                                            Insights will appear here based on medications and health data
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* HealthGemma AI Insights */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
