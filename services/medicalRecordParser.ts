@@ -501,12 +501,12 @@ export class MedicalRecordParser {
     for (const source of dataSources) {
       if (!source) continue;
 
-      // Merge data, avoiding duplicates
-      combined.chiefComplaints = [...new Set([...combined.chiefComplaints, ...source.chiefComplaints])];
-      combined.investigations = [...new Set([...combined.investigations, ...source.investigations])];
-      combined.diagnoses = [...new Set([...combined.diagnoses, ...source.diagnoses])];
-      combined.prescriptions = [...new Set([...combined.prescriptions, ...source.prescriptions])];
-      combined.notes = [...new Set([...combined.notes, ...source.notes])];
+      // Merge data, avoiding duplicates - with defensive checks
+      combined.chiefComplaints = [...new Set([...combined.chiefComplaints, ...(Array.isArray(source.chiefComplaints) ? source.chiefComplaints : [])])];
+      combined.investigations = [...new Set([...combined.investigations, ...(Array.isArray(source.investigations) ? source.investigations : [])])];
+      combined.diagnoses = [...new Set([...combined.diagnoses, ...(Array.isArray(source.diagnoses) ? source.diagnoses : [])])];
+      combined.prescriptions = [...new Set([...combined.prescriptions, ...(Array.isArray(source.prescriptions) ? source.prescriptions : [])])];
+      combined.notes = [...new Set([...combined.notes, ...(Array.isArray(source.notes) ? source.notes : [])])];
 
       // Merge vitals if present
       if (source.vitals) {

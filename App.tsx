@@ -13,6 +13,7 @@ import SimpleLogin from './components/SimpleLogin';
 import BackupService, { type EncryptedBackup } from './services/backupService';
 import type { Patient, MedicalRecord, Document, Reminder, Medication, Doctor } from './types';
 import { generatePatientPdf } from './services/pdfService';
+import { MedicalRecordParser } from './services/medicalRecordParser';
 import { simpleAuthService, type SimpleAuthState } from './services/simpleAuthService';
 import { useSecureHealthStore } from './stores/useSecureHealthStore';
 import DataRetrievalService from './services/dataRetrievalService';
