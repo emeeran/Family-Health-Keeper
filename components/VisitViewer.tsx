@@ -9,8 +9,10 @@ interface VisitViewerProps {
   doctor?: Doctor;
   documents?: Document[];
   patientName?: string;
+  patientId?: string;
   onEdit?: () => void;
   onPrint?: () => void;
+  onUpdateRecord?: (patientId: string, recordId: string, updates: Partial<MedicalRecord>) => Promise<void>;
 }
 
 const VisitViewer: React.FC<VisitViewerProps> = ({
@@ -18,16 +20,22 @@ const VisitViewer: React.FC<VisitViewerProps> = ({
   doctor,
   documents = [],
   patientName,
+  patientId,
   onEdit,
   onPrint,
+  onUpdateRecord,
 }) => {
   const [visitOverview, setVisitOverview] = useState<VisitOverview | null>(null);
   const [isGeneratingOverview, setIsGeneratingOverview] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'details' | 'documents'>('overview');
 
-  // Generate visit overview when component mounts or record changes
+  // Check for existing AI overview on mount
   useEffect(() => {
-    generateVisitOverview();
+    if (record.aiOverview) {
+      setVisitOverview(record.aiOverview);
+    } else {
+      generateVisitOverview();
+    }
   }, [record, documents]);
 
   const generateVisitOverview = async () => {
@@ -65,10 +73,28 @@ const VisitViewer: React.FC<VisitViewerProps> = ({
 
         const overview = MedicalRecordParser.generateVisitOverview(parsedData, record);
         setVisitOverview(overview);
+
+        // Save the AI overview to the record for persistence
+        if (onUpdateRecord && patientId) {
+          try {
+            await onUpdateRecord(patientId, record.id, { aiOverview: overview });
+          } catch (error) {
+            console.error('Failed to save AI overview:', error);
+          }
+        }
       } else {
         const parsedData = MedicalRecordParser.parseMedicalRecord(combinedText);
         const overview = MedicalRecordParser.generateVisitOverview(parsedData, record);
         setVisitOverview(overview);
+
+        // Save the AI overview to the record for persistence
+        if (onUpdateRecord && patientId) {
+          try {
+            await onUpdateRecord(patientId, record.id, { aiOverview: overview });
+          } catch (error) {
+            console.error('Failed to save AI overview:', error);
+          }
+        }
       }
     } catch (error) {
       console.error('Error generating visit overview:', error);
@@ -142,6 +168,18 @@ const VisitViewer: React.FC<VisitViewerProps> = ({
           </div>
 
           <div className='flex gap-2'>
+            {/* Persistent Generate Insights Button */}
+            <button
+              onClick={generateVisitOverview}
+              disabled={isGeneratingOverview}
+              className='flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors disabled:opacity-50'
+              title='Generate AI Insights'
+            >
+              <Brain className='h-4 w-4' />
+              <span className='text-sm font-medium'>
+                {isGeneratingOverview ? 'Generating...' : 'Generate Insights'}
+              </span>
+            </button>
             {onEdit && (
               <button
                 onClick={onEdit}

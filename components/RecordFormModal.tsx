@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { MedicalRecord, Doctor, Document } from '../types';
+import { processMedicalDocument } from '../services/ocrService';
 
 interface RecordFormModalProps {
   isOpen: boolean;
@@ -48,6 +49,14 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isProcessingOCR, setIsProcessingOCR] = useState(false);
+  const [ocrSuggestions, setOcrSuggestions] = useState<{
+    complaint?: string;
+    investigations?: string;
+    diagnosis?: string;
+    prescription?: string;
+    notes?: string;
+  }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Update form data when doctors change to ensure we have the latest doctor list
@@ -91,7 +100,7 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
     setSelectedFiles([]);
   }, [editData, doctors]);
 
-  const handleFileChange = (files: FileList | null) => {
+  const handleFileChange = async (files: FileList | null) => {
     if (!files) return;
 
     const fileArray = Array.from(files);
@@ -107,6 +116,91 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
     }
 
     setSelectedFiles(prev => [...prev, ...validFiles]);
+
+    // Process OCR for new files
+    if (validFiles.length > 0) {
+      await processOCRForFiles(validFiles);
+    }
+  };
+
+  const processOCRForFiles = async (files: File[]) => {
+    setIsProcessingOCR(true);
+    try {
+      const extractedData = {
+        complaint: '',
+        investigations: '',
+        diagnosis: '',
+        prescription: '',
+        notes: ''
+      };
+
+      for (const file of files) {
+        // Create a mock document object for OCR processing
+        const mockDocument: Document = {
+          id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          name: file.name,
+          type: file.type === 'application/pdf' ? 'pdf' : 'image',
+          uploadedAt: new Date().toISOString(),
+          size: file.size,
+          url: URL.createObjectURL(file)
+        };
+
+        try {
+          const ocrResult = await processMedicalDocument(mockDocument);
+
+          // Extract and categorize information from OCR result
+          const extractedText = ocrResult.text;
+          const extractedDataFromOCR = ocrResult.extractedData;
+
+          // Auto-fill complaint
+          if (extractedDataFromOCR.diagnosis && extractedDataFromOCR.diagnosis.length > 0) {
+            extractedData.complaint = extractedDataFromOCR.diagnosis.join('; ');
+          }
+
+          // Auto-fill investigations if lab results are found
+          if (extractedDataFromOCR.labResults && extractedDataFromOCR.labResults.length > 0) {
+            const labText = extractedDataFromOCR.labResults
+              .map(lab => `${lab.test}: ${lab.value} ${lab.unit}`)
+              .join(', ');
+            extractedData.investigations = labText;
+          }
+
+          // Auto-fill diagnosis
+          if (extractedDataFromOCR.diagnosis && extractedDataFromOCR.diagnosis.length > 0) {
+            extractedData.diagnosis = extractedDataFromOCR.diagnosis.join(', ');
+          }
+
+          // Prescription auto-fill disabled - medications should be entered manually
+          // Users can manually enter prescription details from medical documents
+
+          // Add any additional relevant text to notes
+          if (extractedText && !extractedData.notes.includes(extractedText.substring(0, 100))) {
+            extractedData.notes += (extractedData.notes ? '\n\n' : '') + `Document: ${file.name}\n${extractedText}`;
+          }
+
+        } catch (error) {
+          console.error(`Error processing OCR for ${file.name}:`, error);
+        }
+      }
+
+      // Set OCR suggestions and auto-fill the form
+      setOcrSuggestions(extractedData);
+
+      // Auto-fill form fields with extracted data (only if fields are empty)
+      setFormData(prev => ({
+        ...prev,
+        complaint: prev.complaint || extractedData.complaint,
+        investigations: prev.investigations || extractedData.investigations,
+        diagnosis: prev.diagnosis || extractedData.diagnosis,
+        prescription: prev.prescription || extractedData.prescription,
+        notes: prev.notes || extractedData.notes
+      }));
+
+    } catch (error) {
+      console.error('Error during OCR processing:', error);
+    } finally {
+      setIsProcessingOCR(false);
+    }
   };
 
   const removeFile = (index: number) => {
@@ -291,16 +385,33 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-2">
                       Prescription
+                      {ocrSuggestions.prescription && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                          Auto-filled from OCR
+                        </span>
+                      )}
                     </label>
-                    <textarea
-                      value={formData.prescription}
-                      onChange={(e) => setFormData({...formData, prescription: e.target.value})}
-                      rows={2}
-                      placeholder="Medications with dosage..."
-                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={formData.prescription}
+                        onChange={(e) => setFormData({...formData, prescription: e.target.value})}
+                        rows={2}
+                        placeholder="Medications with dosage..."
+                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
+                      />
+                      {ocrSuggestions.prescription && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({...prev, prescription: ocrSuggestions.prescription || ''}))}
+                          className="absolute top-1 right-1 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded hover:bg-purple-200 transition-colors"
+                          title="Use OCR suggestion"
+                        >
+                          Use OCR
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
@@ -329,6 +440,36 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
                   </span>
                 </div>
 
+                {/* OCR Processing Status */}
+                {isProcessingOCR && (
+                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      <span className="text-sm text-blue-700 font-medium">
+                        Processing OCR... Extracting medical information
+                      </span>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Automatically analyzing documents to fill prescription and other fields
+                    </p>
+                  </div>
+                )}
+
+                {/* OCR Success Summary */}
+                {!isProcessingOCR && ocrSuggestions.prescription && (
+                  <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
+                      <span className="text-sm text-green-700 font-medium">
+                        OCR Processing Complete
+                      </span>
+                    </div>
+                    <p className="text-xs text-green-600 mt-1">
+                      Prescription and other medical information have been extracted from your documents
+                    </p>
+                  </div>
+                )}
+
                 <div className="mb-3">
                   <label
                     htmlFor="record-file-upload"
@@ -348,6 +489,9 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
                       }`}>cloud_upload</span>
                       <p className="text-xs text-gray-600 dark:text-gray-400">
                         <span className="font-semibold text-amber-600">Click to upload</span> or drag & drop
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        OCR will auto-fill prescription fields
                       </p>
                     </div>
                     <input

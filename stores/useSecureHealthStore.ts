@@ -243,25 +243,52 @@ export const useSecureHealthStore = create<SecureHealthState>((set, get) => ({
 
   updateRecord: async (patientId: string, recordId: string, updates: Partial<MedicalRecord>) => {
     try {
+      // Validate inputs
+      if (!patientId || !recordId) {
+        throw new Error('Patient ID and Record ID are required');
+      }
+
       const { patients } = get();
       const patientIndex = patients.findIndex(p => p.id === patientId);
 
-      if (patientIndex !== -1) {
-        const updatedPatients = [...patients];
-        const recordIndex = updatedPatients[patientIndex].records.findIndex(r => r.id === recordId);
-
-        if (recordIndex !== -1) {
-          updatedPatients[patientIndex].records[recordIndex] = {
-            ...updatedPatients[patientIndex].records[recordIndex],
-            ...updates
-          };
-
-          await secureStorage.savePatients(updatedPatients);
-          set({ patients: updatedPatients });
-        }
+      if (patientIndex === -1) {
+        throw new Error(`Patient with ID ${patientId} not found`);
       }
+
+      const updatedPatients = [...patients];
+      const recordIndex = updatedPatients[patientIndex].records.findIndex(r => r.id === recordId);
+
+      if (recordIndex === -1) {
+        throw new Error(`Record with ID ${recordId} not found for patient ${patientId}`);
+      }
+
+      // Create updated record with timestamp
+      const updatedRecord = {
+        ...updatedPatients[patientIndex].records[recordIndex],
+        ...updates,
+        updatedAt: new Date().toISOString()
+      };
+
+      updatedPatients[patientIndex].records[recordIndex] = updatedRecord;
+
+      // Validate the updated record before saving
+      if (!updatedRecord.id || !updatedRecord.date) {
+        throw new Error('Updated record is missing required fields');
+      }
+
+      await secureStorage.savePatients(updatedPatients);
+      set({ patients: updatedPatients });
+
+      console.log('Record updated successfully:', { patientId, recordId, updatedAt: updatedRecord.updatedAt });
+
     } catch (error) {
-      console.error('Failed to update record:', error);
+      console.error('Failed to update record:', {
+        patientId,
+        recordId,
+        updates,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error; // Re-throw to allow caller to handle the error
     }
   },
 

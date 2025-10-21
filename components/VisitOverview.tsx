@@ -9,6 +9,29 @@ interface VisitOverviewProps {
   visitDate?: string;
 }
 
+// Simple markdown formatter for medical content
+const formatMarkdown = (text: string): string => {
+  return text
+    // Convert **bold** to <strong>
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Convert *italic* to <em>
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    // Convert headers
+    .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold text-slate-900 mt-4 mb-2">$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold text-slate-900 mt-6 mb-3">$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-slate-900 mt-8 mb-4">$1</h1>')
+    // Convert bullet points
+    .replace(/^[\*\-] (.*$)/gim, '<li class="ml-4 mb-1">• $1</li>')
+    // Convert numbered lists
+    .replace(/^\d+\. (.*$)/gim, '<li class="ml-4 mb-1 list-decimal">$1</li>')
+    // Convert line breaks
+    .replace(/\n\n/g, '</p><p class="mb-4">')
+    .replace(/\n/g, '<br />')
+    // Wrap in paragraphs if not already wrapped
+    .replace(/^(?!<[h|l|p])/gim, '<p class="mb-4">')
+    .replace(/(?<!>)$/gim, '</p>');
+};
+
 export const VisitOverview: React.FC<VisitOverviewProps> = ({
   overview,
   patientName,
@@ -98,7 +121,7 @@ export const VisitOverview: React.FC<VisitOverviewProps> = ({
         <span className='font-medium capitalize'>{overview.urgencyLevel} Priority</span>
       </div>
 
-      {/* Clinical Summary */}
+      {/* Clinical Summary - Formatted in Markdown */}
       <div className='bg-white p-6 rounded-xl border border-slate-200 shadow-sm'>
         <h4 className='text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2'>
           <div className='w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center'>
@@ -107,7 +130,12 @@ export const VisitOverview: React.FC<VisitOverviewProps> = ({
           Clinical Summary
         </h4>
         <div className='bg-slate-50 p-4 rounded-lg border border-slate-100'>
-          <p className='text-slate-700 leading-relaxed'>{overview.summary}</p>
+          <div
+            className='prose prose-slate max-w-none text-slate-700 leading-relaxed'
+            dangerouslySetInnerHTML={{
+              __html: formatMarkdown(overview.summary)
+            }}
+          />
         </div>
       </div>
 
@@ -205,28 +233,38 @@ export const VisitOverview: React.FC<VisitOverviewProps> = ({
         </div>
       )}
 
-      {/* Recommendations */}
+      {/* Recommendations - Formatted in Markdown */}
       {overview.recommendations.length > 0 && (
         <div className='bg-blue-50 p-6 rounded-xl border border-blue-200'>
           <h4 className='text-lg font-semibold text-blue-900 mb-3'>Recommendations</h4>
-          <ul className='space-y-2'>
+          <div className='space-y-2'>
             {overview.recommendations.map((recommendation, index) => (
-              <li key={index} className='flex items-start gap-3'>
+              <div key={index} className='flex items-start gap-3'>
                 <CheckCircle className='h-4 w-4 text-blue-600 mt-1 flex-shrink-0' />
-                <span className='text-blue-800'>{recommendation}</span>
-              </li>
+                <div
+                  className='text-blue-800 leading-relaxed'
+                  dangerouslySetInnerHTML={{
+                    __html: formatMarkdown(recommendation)
+                  }}
+                />
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
-      {/* Follow-up Plan */}
+      {/* Follow-up Plan - Formatted in Markdown */}
       <div className='bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200'>
         <h4 className='text-lg font-semibold text-green-900 mb-3 flex items-center gap-2'>
           <Calendar className='h-5 w-5' />
           Follow-up Plan
         </h4>
-        <p className='text-green-800 font-medium'>{overview.followUpPlan}</p>
+        <div
+          className='text-green-800 font-medium leading-relaxed'
+          dangerouslySetInnerHTML={{
+            __html: formatMarkdown(overview.followUpPlan)
+          }}
+        />
       </div>
 
       {/* Footer */}
