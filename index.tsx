@@ -4,7 +4,6 @@ import ReactDOM from 'react-dom/client';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { NotificationProvider } from './components/ui/NotificationSystem';
 import App from './App';
-import StoreTest from './StoreTest';
 
 // Simple test component
 const TestApp: React.FC = () => {

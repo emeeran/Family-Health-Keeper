@@ -188,9 +188,9 @@ const App: React.FC = () => {
 
   // Subscribe to simple auth state changes and clear any existing auth on mount
   useEffect(() => {
-    // Clear any existing authentication data to prevent auto-login
-    localStorage.removeItem('simple_auth_user');
-    localStorage.removeItem('simple_auth_authenticated');
+    // Don't clear authentication data - allow auto-login for better UX
+    // localStorage.removeItem('simple_auth_user');
+    // localStorage.removeItem('simple_auth_authenticated');
 
     const unsubscribe = simpleAuthService.subscribe(setAuthState);
 

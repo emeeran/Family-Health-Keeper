@@ -13,11 +13,11 @@ const SimpleLogin: React.FC<SimpleLoginProps> = ({ isOpen, onClose, onLoginSucce
   const [authState, setAuthState] = useState<SimpleAuthState>(simpleAuthService.getAuthState());
   const [error, setError] = useState('');
 
-  // Subscribe to auth state changes and clear any existing auto-login
+  // Subscribe to auth state changes - don't clear existing auth
   React.useEffect(() => {
-    // Clear any existing authentication data to prevent auto-login
-    localStorage.removeItem('simple_auth_user');
-    localStorage.removeItem('simple_auth_authenticated');
+    // Don't clear authentication data - allow auto-login for better UX
+    // localStorage.removeItem('simple_auth_user');
+    // localStorage.removeItem('simple_auth_authenticated');
 
     const unsubscribe = simpleAuthService.subscribe(setAuthState);
     return unsubscribe;

@@ -76,7 +76,7 @@ class SimpleAuthService {
 
       // Only load from storage if explicitly requested (not on initialization)
       // This prevents auto-login behavior
-      if (false && storedUser && isAuthenticated) { // Set to false to prevent auto-login
+      if (true && storedUser && isAuthenticated) { // Set to true to enable auto-login for better UX
         const user: SimpleUser = JSON.parse(storedUser);
         this.authState.user = user;
         this.authState.isAuthenticated = true;
